@@ -2,6 +2,9 @@
 
 ## 1.页面展示
 
+![https://github.com/Bmixo/btSearch/blob/master/example/index_old.png]
+![https://github.com/Bmixo/btSearch/blob/master/example/index.PNG]
+![https://github.com/Bmixo/btSearch/blob/master/example/detail.PNG]
 ## 2.程序架构
 名称   |  用途
 |------------:|-----------
@@ -9,6 +12,7 @@ server |  收集torrent数据
 worker | 收集Hash信息
 web    |  数据展示
 Tool   | 工具
+![https://github.com/Bmixo/btSearch/blob/master/example/framework.png]
 
 ## 3.安装
 1. 在安装环境前您需要配置golang环境  [Go](https://golang.org/) 下载地址
