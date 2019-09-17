@@ -4,7 +4,7 @@
 
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index_old.png)
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index.PNG)
-![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/detail.PNG])
+![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/detail.PNG)
 ## 2.程序架构
 名称   |  用途
 |------------:|-----------
