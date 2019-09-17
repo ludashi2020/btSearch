@@ -152,7 +152,7 @@ func (server *webServer) Search(c *gin.Context) {
 func searchES(kw, category, start string) (torrentList []torrent, begin int, end int, total int, took float64, err error) {
 
 	mod := `[
-		{"term": {"file_type": "` + category + `"}},
+		{"term": {"category": "` + category + `"}},
 				  {"match": {
 		  "name" : {
 			"query":"` + kw + `",
