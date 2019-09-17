@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=0" /> 
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->    
+    {% if loc=="zh"%}
+    <title>{{key_word}} 搜索结果</title>
+    <meta name="keywords" content="{{key_word}}迅雷下载 {{key_word}}种子下载 {{key_word}}磁力链接 {{key_word}}在线播放" />    
+    <meta name="description" content="BAVBT - 一个免费的种子搜索引擎" /> 
+    {% endif%}
+    {% if loc=="en"%}
+    <title>{{key_word}} Search Result</title>
+    <meta name="keywords" content="{{key_word}}torrent download,{{key_word}}free download,{{key_word}}magnet link" />    
+    <meta name="description" content="BAVBT - bt.bmixo.com A free torrent search site." /> 
+    {% endif%}
+
+    
+    
+    <!-- Bootstrap -->
+	<link href="https://apps.bdimg.com/libs/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="//cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <script type="text/javascript">
+    //iOS Web APP中点击链接跳转到Safari 浏览器新标签页的问题 devework.com
+    //stanislav.it/how-to-prevent-ios-standalone-mode-web-apps-from-opening-links-in-safari
+    if(("standalone" in window.navigator) && window.navigator.standalone){
+    var noddy, remotes = false;
+    document.addEventListener('click', function(event) {
+    noddy = event.target;
+    while(noddy.nodeName !== "A" && noddy.nodeName !== "HTML") {
+    noddy = noddy.parentNode;
+    }
+    if('href' in noddy && noddy.href.indexOf('http') !== -1 && (noddy.href.indexOf(document.location.host) !== -1 || remotes))
+    {
+    event.preventDefault();
+    document.location.href = noddy.href;
+    }
+    },false);
+    }
+    </script>
+ <script>
+function openUrlWithCookies(url){
+    var category=getCookie("category");
+        if (category==""){
+            category="all"
+    }
+    location.href=url+"&category="+category;
+}
+function getCookie(cname)
+    {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) 
+    {
+        var c = ca[i].trim();
+        if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+    }
+    return "";
+    }
+function rwurl(myform){
+	if(document.getElementById("search").value!="")
+	{
+        var category=getCookie("category");
+        if (category==""){
+            category="all"
+        }
+window.location.href="/search?kw="+encodeURIComponent(document.getElementById("search").value)+"&start=1&category="+category;
+	}else{
+		return false;
+	}
+}
+</script>
+  <body>
+      <div class="container">
+   <nav class="navbar navbar-default navbar-fixed-top"> 
+    <div class="container-fluid"> 
+     <!-- Brand and toggle get grouped for better mobile display --> 
+     <div class="navbar-header"> 
+      <a class="navbar-brand" href="/"><span class="visible-lg-block"><i class="glyphicon glyphicon-magnet"></i>&nbsp;<span class="n1">B</span><span class="n2">ook</span><span class="n3">A</span><span class="n4">nd</span><span class="n5">V</span><span class="n6">ideo</span></span><span class="hidden-lg"><i class="glyphicon glyphicon-magnet"></i></span></a>
+      <div class="navbar-newform">
+
+
+             <form class="form-group form-inline"  method="get" id="topsearch" name="search">
+                <div class="input-group">
+                  <input type="text" class="form-control" baidusug="2" onkeydown="if(event.keyCode==13) {rwurl();return false;}" name="kw" id="search" placeholder="你想要的?" value="{{key_word}}">
+                  <span class="input-group-btn">
+                  <button class="btn btn-success" onclick="rwurl();" type="button"><i class="fa fa-caret-right margin-left-sm margin-right-sm"></i><span class="glyphicon glyphicon-search"></span>&nbsp;{% if loc=="zh"%}搜索{% endif%}{% if loc=="en"%}Search{% endif%}</button>
+                  </span> 
+                 </div>
+            </form>
+    </div>
+	  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false"> <span class="sr-only">Bavbt</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> 
+     </div> 
+     <!-- Collect the nav links, forms, and other content for toggling --> 
+     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1"> 
+      <ul class="nav navbar-nav navbar-right"> 
+        {%if loc=="zh"%}
+        <li class="active"><a href="/"><span class="glyphicon glyphicon-home"></span>&nbsp;首页 <span class="sr-only">首页</span></a></li> 
+        <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-wrench"></span>&nbsp;功能<span class="caret"></span></a>
+        <ul class="dropdown-menu">
+            <li role="separator" class="divider"></li>
+            <li><a href="/about"><span class="glyphicon glyphicon-eye-open"></span>&nbsp;关于及免责声明</a></li>
+        {% endif%}
+        {%if loc=="en"%}
+        <li class="active"><a href="/"><span class="glyphicon glyphicon-home"></span>&nbsp;Home <span class="sr-only">Home</span></a></li> 
+        <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-wrench"></span>&nbsp;More<span class="caret"></span></a>
+        <ul class="dropdown-menu">
+            <li role="separator" class="divider"></li>
+            <li><a href="/about"><span class="glyphicon glyphicon-eye-open"></span>&nbsp;About</a></li>
+        {% endif%}
+        </ul>
+		</li>
+      </ul> 
+     </div> 
+     <!-- /.navbar-collapse --> 
+    </div>
+    <!-- /.container-fluid -->
+   </nav> 
+	
+    <div class="container">
+    	<div class="row visible-lg">
+                <div class="col-lg-12 ">
+                    <div class="add ">
+                    </div>
+                </div>
+        </div>
+        <div class="row visible-lg-block">
+
+
+	</div>
+      <div class="row hidden-lg">
+      
+
+       </div>
+    </p>
+     		<!--p-->
+    <nav>
+            {% if end !=-1 %}	
+            {% if loc=="zh"%}
+            <ul class="pagination"><li><a a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start=1')">首页</a></li>
+                {% if begin>1 %}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin-1}}')">上一页</a></li>{% endif %}
+                <li class="active"><a>{{begin}}</a></li>{% if  end - begin >0%}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+1}}')">{{begin+1}}</a></li>
+                    {% if  end - begin-1 >0%}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+2}}')">{{begin+2}}</a></li>{% endif %}
+                <li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+1}}')">下一页</a></li>
+                <li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{end}}')">尾页</a></li>{% endif %}
+            </ul>
+            {% endif%}
+            {% if loc=="en"%}
+            <ul class="pagination"><li><a a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start=1')">Home</a></li>
+                {% if begin>1 %}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin-1}}')">Last</a></li>{% endif %}
+                <li class="active"><a>{{begin}}</a></li>{% if  end - begin >0%}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+1}}')">{{begin+1}}</a></li>
+                    {% if  end - begin-1 >0%}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+2}}')">{{begin+2}}</a></li>{% endif %}
+                <li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+1}}')">Next</a></li>
+                <li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{end}}')">End</a></li>{% endif %}
+            </ul>
+            {% endif%}
+            {% endif %}
+</nav>
+
+		<div class="panel panel-primary searchmehome">
+                <div class="panel-heading ">
+                {% if loc=="zh"%}
+                你搜索了关键词:<span class="text-danger">{{key_word}}&nbsp;&nbsp;</span>共有<span class="text-danger">{{total}}</span>个结果&nbsp;&nbsp;耗时:<span class="text-danger">{{took|floatformat:"3"}}</span>s 
+                {% endif%}
+                {% if loc=="en"%}
+                The<span class="text-danger">&nbsp;&nbsp;{{key_word}}&nbsp;&nbsp;</span>Total has:<span class="text-danger">{{total}}</span>&nbsp;result&nbsp;&nbsp;Took:<span class="text-danger">{{took|floatformat:"3"}}</span>s 
+                {% endif%}
+            </div>
+  			<div class="panel-body">
+			{% for torrent in torrent_list %}
+                     		<ul class="list-group">
+                  <li class="list-group-item title  list-group-item-success"><span class="glyphicon glyphicon-thumbs-up"></span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/details/{{torrent.ObjectID}}.html"  class="text-success">{{torrent.Name}}</a></li><!--[FHD-1080P]<span class="highlight">{{key_word}}</span>-413</a></li> -->
+                  <li class="list-group-item code text-left">
+                  	<dl class="list-code">
+                      
+                      <dd class="text-type">{{torrent.Category}}</dd>
+                      {% if loc=="zh"%}
+                      <dt class="">大小:</dt>
+                      <dd class="text-size">{{torrent.Length|floatformat:"2"}}{{torrent.LengthType}}</dd>
+                      <dt>时间:</dt>
+                      {% endif %}
+                      {% if loc=="en"%}
+                      <dt class="">Size:</dt>
+                      <dd class="text-size">{{torrent.Length|floatformat:"2"}}{{torrent.LengthType}}</dd>
+                      <dt>CreateTime:</dt>
+                      {% endif %}
+                      <dd class="text-time">{{torrent.CreateTime}}</dd>
+					
+                      
+                    </dl>
+                   
+                     <dl class="down">
+                            {% if loc == "zh"%}
+                            <a href="{{torrent.thunderLink}}" class="btn btn-primary" title="迅雷下载"><span class="glyphicon glyphicon-hdd"></span>&nbsp;迅雷下载</a>
+                            <a href="magnet:?xt=urn:btih:{{torrent.InfoHash}}" class="btn btn-success" title="磁力链接下载"><span class="glyphicon glyphicon-magnet"></span>&nbsp;磁力链接</a>
+                            {% endif %}
+                            {% if loc == "en"%}
+                            <a href="magnet:?xt=urn:btih:{{torrent.InfoHash}}" class="btn btn-success" title="Magnet Link"><span class="glyphicon glyphicon-magnet"></span>&nbsp;Magnet Link</a>
+                            {% endif %}
+                    </dl>
+                  </li>
+            </ul>
+	{% endfor %}
+			
+                       	</div>
+</div>
+    <nav>
+{% if end !=-1 %}	
+{% if loc=="zh"%}
+<ul class="pagination"><li><a a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start=1')">首页</a></li>
+    {% if begin>1 %}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin-1}}')">上一页</a></li>{% endif %}
+    <li class="active"><a>{{begin}}</a></li>{% if  end - begin >0%}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+1}}')">{{begin+1}}</a></li>
+        {% if  end - begin-1 >0%}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+2}}')">{{begin+2}}</a></li>{% endif %}
+    <li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+1}}')">下一页</a></li>
+    <li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{end}}')">尾页</a></li>{% endif %}
+</ul>
+{% endif%}
+{% if loc=="en"%}
+<ul class="pagination"><li><a a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start=1')">Home</a></li>
+    {% if begin>1 %}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin-1}}')">Last</a></li>{% endif %}
+    <li class="active"><a>{{begin}}</a></li>{% if  end - begin >0%}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+1}}')">{{begin+1}}</a></li>
+        {% if  end - begin-1 >0%}<li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+2}}')">{{begin+2}}</a></li>{% endif %}
+    <li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{begin+1}}')">Next</a></li>
+    <li><a href="javascript:void(0);" onclick="openUrlWithCookies('/search?kw={{key_word}}&start={{end}}')">End</a></li>{% endif %}
+</ul>
+{% endif%}
+{% endif %}
+</nav>
+
+          <!--/p-->
+    	<p class="hotsearch">
+
+       
+        </p>
+        <div class="row">
+    	<div class="col-lg-12 " style="height: 40px;">
+        	<div class="add ">
+            </div>
+        </div>
+    </div>
+    
+    
+    </div>
+   
+    
+    
+</div>
+
+
+
+ <footer class="navbar-fixed-bottom">
+  <footer class="footer">
+   <div class="container">
+    <p class="muted credit text-center">
+<strong> 2018  &ensp;&ensp;<a href="/">bt.bmixo.com</a>&ensp;&ensp;<a href="/">{%if loc=="zh"%}种子搜索{% endif %}{%if loc=="en"%}Bt Search{% endif %}</a></strong></p><strong>
+   </strong></div><strong>
+  </strong></footer><strong>
+   </strong></footer>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+
+    
+    <script src="https://libs.baidu.com/jquery/1.11.3/jquery.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://apps.bdimg.com/libs/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+  </body>
+</html>

@@ -1,0 +1,343 @@
+body {
+	height: 100%;
+	position: relative;
+	min-height: 100%;
+	padding-top: 70px;
+	padding-bottom: 50px;
+	background: url(../../img/bg.png)
+}
+
+.container {
+	padding-bottom: 10px
+}
+
+h2 {
+	white-space: nowrap;
+	overflow: hidden
+}
+
+@media(max-width:1119px) {
+	.container {
+		padding: 5px
+	}
+}
+
+.navbar-default {
+	background-color: #7aadd9;
+	border-color: #7aadd9
+}
+
+.navbar-default .navbar-brand {
+	color: #fff
+}
+
+.navbar-default .navbar-nav>li>a {
+	color: #fff
+}
+
+.navbar-default .navbar-nav>.active>a,.navbar-default .navbar-nav>.active>a:hover,.navbar-default .navbar-nav>.active>a:focus {
+	color: #fff;
+	background-color: #496b88
+}
+
+.dropdown-menu .divider {
+	height: 1px;
+	margin: 0;
+	background-color: #000
+}
+
+.dropdown-menu>li>a {
+	color: #fff
+}
+
+.navbar-default .navbar-toggle .icon-bar {
+	background-color: #fff
+}
+
+.navbar-form {
+	border: 0
+}
+
+.navbar-newform {
+	float: left;
+	height: 50px;
+	line-height: 20px;
+	font-size: 18px;
+	padding: 8px 0 8px 30px;
+	width: 60%;
+	position: relative
+}
+
+.navbar-newform form {
+	box-sizing: border-box;
+	overflow: visible
+}
+
+.navbar-default .navbar-nav .open .dropdown-menu>li>a {
+	color: #fff;
+	background-color: #428bca
+}
+
+.dropdown-menu {
+	color: #fff;
+	background-color: #496b88
+}
+
+.alert {
+	margin-bottom: 0
+}
+
+.jumbotron {
+	background: 0 0;
+	margin-bottom: 0;
+	padding: 10px
+}
+
+.jumbotron h1 {
+	font-size: 3em;
+	margin-bottom: 0;
+	margin-top: 0
+}
+
+.jumbotron .navbar-collapse {
+	border-top: 0;
+	box-shadow: none;
+	padding: 0
+}
+
+.jumbotron .btn {
+	margin-bottom: 5px
+}
+
+.hotsearch {
+}
+
+.hotsearch .navbar-toggle {
+	background-color: #5cb85c;
+	margin: auto;
+	float: none;
+	background-image: none
+}
+
+#collapse-2 .btn {
+	margin-bottom: 5px
+}
+
+#collapse-2 .navbar-toggle {
+	background-color: #5cb85c;
+	background-image: none
+}
+
+.panel {
+}
+
+.panel-body .btn {
+	margin-bottom: 5px
+}
+
+.panel .text-danger {
+	color: #ecf4c3
+}
+
+.add {
+	border: #999;
+	margin-bottom: 5px
+}
+
+.list-group {
+}
+
+.list-group .title {
+}
+
+.list-group .title span {
+	color: red
+}
+
+.code dl {
+	margin-bottom: 0;
+	color: #666;
+	padding-left: 8px;
+	font-size: 12px
+}
+
+.code dt {
+	float: left;
+	line-height: 34px;
+	font-weight: 100
+}
+
+.code dd {
+	height: 24px;
+	margin: 6px 6px 0;
+	line-height: 24px;
+	float: left;
+	padding-left: 6px;
+	padding-right: 6px
+}
+
+dd.text-type {
+	background-color: green;
+	border-radius: 6px;
+	color: #fff;
+	margin-right: 8px
+}
+
+dd.text-time {
+	background-color: orange;
+	border-radius: 6px;
+	color: #fff;
+	margin-right: 8px
+}
+
+dd.text-ps {
+	background-color: #936;
+	border-radius: 6px;
+	color: #fff;
+	margin-right: 8px
+}
+
+dd.text-size {
+	background-color: #0e4973;
+	border-radius: 6px;
+	color: #fff;
+	margin-right: 8px
+}
+
+.code {
+	margin-bottom: 0;
+	padding: 7px 5px
+}
+
+.code .list-code {
+	height: auto;
+	text-align: left
+}
+
+.down {
+	text-align: center;
+	text-align: right;
+	display: table;
+	width: 100%
+}
+
+.down .btn {
+	margin-bottom: 0
+}
+
+.pagination {
+	margin: 0
+}
+
+.badge a {
+	color: #fff
+}
+
+.fenci {
+	float: right
+}
+
+.fenci a {
+	margin: 2px
+}
+
+.fenci .btn {
+	padding: 1px 3px
+}
+
+.fenci .col-sm-10 {
+	padding-right: 0
+}
+
+.form-control[readonly] {
+	cursor: text
+}
+
+.panel-footer a {
+	margin-bottom: 5px
+}
+
+.container {
+	min-height: 100%
+}
+
+.footer {
+	position: absolute;
+	bottom: 0;
+	padding: 10px 0;
+	width: 100%;
+	z-index: 9999;
+	height: 40px;
+	background-color: #2b323c;
+	color: #fff
+}
+
+.footer .container {
+	width: auto;
+	max-width: 680px;
+	padding: 0
+}
+
+.footer .container .text-center {
+	margin: 0;
+	color: #777
+}
+
+.text-success {
+	word-wrap: break-word;
+	word-break: normal
+}
+
+.text-left {
+	word-wrap: break-word;
+	word-break: normal
+}
+
+.bdSug_app {
+	display: none
+}
+
+.searchmehome {
+	margin-top: 60px
+}
+
+.container nav {
+	float: left
+}
+
+.torrentme {
+	margin-top: -20px
+}
+
+a.btn.btn-success {
+	margin-left: 10px
+}
+.navbar-brand{
+	font-size:16px;font-weight: bolder;
+}
+h1.text-center {
+    font-size: 72px;
+}
+span.n1 {
+    color: #176dee;
+}
+
+span.n2 {
+    color: #d8432d;
+}
+
+span.n3 {
+    color: #1d71ee;
+}
+
+span.n4 {
+    color: #ffb601;
+}
+
+span.n5 {
+    color: #009b58;
+}
+
+span.n6 {
+    color: #d8432e;
+}

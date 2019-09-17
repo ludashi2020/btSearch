@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=0"/> 
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+
+    {% if loc=="zh"%}
+    <title>{{Name}} 种子下载</title>
+    <meta name="keywords" content="{{Name}}迅雷下载 {{Name}}种子下载 {{Name}}磁力链接{{Name}}在线播放" />    
+    <meta name="description" content="BAVBT - 一个免费的种子搜索引擎" /> 
+    {% endif%}
+    {% if loc=="en"%}
+    <title>{{Name}} download details</title>
+    <meta name="keywords" content="{{Name}}torrent download,{{Name}}free download,{{Name}}magnet link" />    
+    <meta name="description" content="BAVBT - bt.bmixo.com A free torrent search site." /> 
+    {% endif%}
+
+
+	<link rel="stylesheet" href="https://apps.bdimg.com/libs/bootstrap/3.2.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://apps.bdimg.com/libs/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+	<!--[if lt IE 9]><script src="../assets/js/ie8-responsive-file-warning.js?v=1288490188066.7"></script><![endif]-->
+
+	<link href="/static/css/details.css" rel="stylesheet">
+	<!--[if lt IE 9]>
+	  <script src="https://cdn.bootcss.com/html5shiv/3.7.0/html5shiv.js?v=1288490188066.7"></script>
+	  <script src="https://cdn.bootcss.com/respond.js?v=1288490188066.7/1.4.2/respond.min.js?v=1288490188066.7"></script>
+	<![endif]-->
+  </head>
+  <script type="text/javascript">
+    if(("standalone" in window.navigator) && window.navigator.standalone){
+    var noddy, remotes = false;
+    document.addEventListener('click', function(event) {
+    noddy = event.target;
+    while(noddy.nodeName !== "A" && noddy.nodeName !== "HTML") {
+    noddy = noddy.parentNode;
+    }
+    if('href' in noddy && noddy.href.indexOf('http') !== -1 && (noddy.href.indexOf(document.location.host) !== -1 || remotes))
+    {
+    event.preventDefault();
+    document.location.href = noddy.href;
+    }
+    },false);
+    }
+    </script>
+<script language="javascript">
+function getCookie(cname)
+	{
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) 
+	{
+		var c = ca[i].trim();
+		if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+	}
+	return "";
+	}
+function rwurl(myform){
+	if(myform.kw.value!="")
+	{
+    var category=getCookie("category");
+        if (category==""){
+            category="all"
+        }
+		window.location.href="/search?kw="+encodeURIComponent(myform.kw.value)+"&start=1&category="+category;
+
+	}else{
+		return false;
+	}
+}
+</script>
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+<div id="wrapp">
+
+<div class="navbar navbar-primary navbar-fixed-top">
+<div class="container main-container">
+<div class="navbar-header navbar-right">
+<a class="navbar-brand hidden-sm" href="/" ><span class="glyphicon glyphicon-magnet"></span>&nbsp;<span class="n1">B</span><span class="n2">ook</span><span class="n3">A</span><span class="n4">nd</span><span class="n5">V</span><span class="n6">ideo</span></span></a> </div>
+<div class="navbar-collapse collapse">
+<ul class="nav navbar-nav">
+<li><a>
+    <span class="glyphicon glyphicon-step-backward"></span>
+    <button type="button" onClick="history.go(-1)" style="border:0px;background-color:transparent;padding-top:0px;font-size:14px;padding-left: 3px">
+{% if loc=="zh"%}
+后退</button>
+</a></li>
+<li><a href="/about"><span class="glyphicon glyphicon-hand-up"></span>&nbsp;关于及免责声明</a></li>
+{% endif%}
+{% if loc=="en"%}
+Last</button>
+</a></li>
+<li><a href="/about"><span class="glyphicon glyphicon-hand-up"></span>&nbsp;About</a></li>
+{% endif%}
+</ul>
+</div>
+</div>
+</div>
+
+<div class="jumbotron">
+<div class="container main-container">
+<div class="inerTop">
+<div class="row">
+<div class="col-md-2">
+<h1><span class="n1">B</span><span class="n2">ook</span><span class="n3">A</span><span class="n4">nd</span><span class="n5">V</span><span class="n6">ideo</span></span></h1>
+</div>
+<div class="col-md-10">
+<form method="get" id="topsearch" name="search" style="margin-top: 30px;">
+<fieldset>
+<div class="form-group margin-bottom-none">
+<div class="input-group">
+<input type="text" class="form-control input-lg" baidusug="2" onkeydown="if(event.keyCode==13) {rwurl(this.form);return false;}" name="kw" placeholder='{% if loc=="zh"%}你想要的?{% endif%}{% if loc=="en"%}Want something?{% endif%}' value="">
+
+<span class="input-group-btn">
+<button class="btn input-lg btn-icon btn-primary" onclick="rwurl(this.form);" type="button"><i class="fa fa-caret-right margin-left-sm margin-right-sm"></i><span class="glyphicon glyphicon-search"></span>&nbsp;搜索</button>
+</span>
+</div>
+</div>
+</fieldset>
+</form>
+</div>
+</div>
+<div class="panel panel-primary">
+<div class="panel-heading">
+<h3 class="panel-title">
+<div class="text-left" style="word-break:break-all;"> {{Name}} </div>
+</h3>
+</div>
+<div class="panel-body">
+
+<textarea id="copytext" class="magnetlink form-control" rows="3" onclick="$(this).select();" readonly="readonly">magnet:?xt=urn:btih:{{Infohash}}&dn={{Name}}</textarea>
+</div>
+<div class="panel-footer">
+<div class="text-left">
+
+<a href="magnet:?xt=urn:btih:{{Infohash}}&dn={{Name}}" class="btn btn-sm btn-success"><span class="glyphicon glyphicon-magnet"></span>&nbsp;磁力下载</a>
+<a href="{{thunderLink}}" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-hdd"></span>&nbsp;迅雷下载</a>
+
+
+</div>
+</div>
+</div>
+<br>
+<div class="row">
+<div class="col-md-9">
+<div class="panel panel-primary">
+<div class="panel-heading">
+<h3 class="panel-title">
+<div class="text-left">磁力链接详情</div>
+</h3>
+</div>
+<div class="panel-body">
+
+<dl class=" dl-horizontal magnetmore">
+
+{% if loc=="zh"%}
+<dt class="text-left">Hash值:</dt>
+<dd class="text-left" style="word-break:break-all;">{{Infohash}}</dd>
+<dt class="text-left">种子热度:</dt>
+<dd class="text-left">{{Hot}}</dd>
+<dt class="text-left">文件大小:</dt>
+<dd class="text-left">{{TotalLength|floatformat:"2"}} {{TotalLengthType}}</dd>
+{% if Files%}
+<dt class="text-left">文件类型:</dt>
+<dd class="text-left">{{Category}}</dd>
+<dt class="text-left">文件数量:</dt>
+<dd class="text-left">{{FileNum}}</dd>
+{% else %}
+<dt class="text-left">文件数量:</dt>
+<dd class="text-left">1</dd>
+{% endif %}
+<dt class="text-left">创建日期:</dt>
+<dd class="text-left">{{CreateTime}}</dd>
+<dt class="text-left">最后访问:</dt>
+<dd class="text-left">{{LastTime}}</dd>
+<dt class="text-left">访问标签:</dt>
+<dd class="text-left">
+{% for one in Tag %}
+<a target="_blank" href="/search?kw={{one}}&start=1">{{one}}</a>&nbsp;&nbsp
+{% endfor %}
+</dd>
+
+</div>
+</div>
+<div class="panel panel-primary">
+<div class="panel-heading">
+<h3 class="panel-title">
+<div class="text-left">文件列表详情</div>
+{% endif%}
+{% if loc=="en"%}
+<dt class="text-left">Hash Value:</dt>
+<dd class="text-left" style="word-break:break-all;">{{Infohash}}</dd>
+<dt class="text-left">Hot:</dt>
+<dd class="text-left">{{Hot}}</dd>
+<dt class="text-left">Size:</dt>
+<dd class="text-left">{{TotalLength|floatformat:"2"}} {{TotalLengthType}}</dd>
+{% if Files%}
+<dt class="text-left">Type:</dt>
+<dd class="text-left">{{Category}}</dd>
+<dt class="text-left">Files Number:</dt>
+<dd class="text-left">{{FileNum}}</dd>
+{% else %}
+<dt class="text-left">Files Number:</dt>
+<dd class="text-left">1</dd>
+{% endif %}
+<dt class="text-left">Create Date:</dt>
+<dd class="text-left">{{CreateTime}}</dd>
+<dt class="text-left">Last Visit:</dt>
+<dd class="text-left">{{LastTime}}</dd>
+<dt class="text-left">Tag:</dt>
+<dd class="text-left">
+{% for one in Tag %}
+<a target="_blank" href="/search?kw={{one}}&start=1">{{one}}</a>&nbsp;&nbsp
+{% endfor %}
+</dd>
+</div>
+</div>
+<div class="panel panel-primary">
+<div class="panel-heading">
+<h3 class="panel-title">
+<div class="text-left">Details</div>
+{% endif%}
+
+</h3>
+</div>
+<div class="panel-body">
+
+<select multiple="multiple" class="form-control" style="height: 100px;-webkit-appearance: none;">
+{% if Files%}
+
+{% for path in Files %}
+
+<option>{{path.FilePath}}&nbsp;&nbsp;&nbsp;&nbsp;{{path.FileSize|floatformat:"2"}} {{path.FileSizeType}}</option>
+{% endfor %}
+
+{% else %}
+<option>{{Name}}&nbsp;&nbsp;&nbsp;&nbsp;{{TotalLength|floatformat:"2"}} {{TotalLengthType}}</option>
+
+{% endif %}
+
+</select>
+</div>
+</div>
+</div>
+<div class="col-md-3">
+<div class="panel panel-primary">
+<div class="panel-heading">
+<h3 class="panel-title">
+<div class="text-left">Other</div>
+</h3>
+</div>
+<div class="panel-body">
+
+</div>
+<div class="panel-footer">
+---------------------------
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<footer>
+<div class="footer-bottom">
+<div class="container">
+<p class="muted credit text-center"><strong>
+<strong> 2018 <a href="/">bt.bmixo.com</a>  <a href="/" >{%if loc=="zh"%}种子搜索{% endif %}{%if loc=="en"%}Bt Search{% endif %}</a></strong></strong></p></div></div></footer>
