@@ -1,7 +1,11 @@
 # btSearch  一个用go语言实现的磁力搜索网站  
 
 ## 1.页面展示
+[演示站点](https://bt.bmixo.com/)
 
+![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index_old.png)
+![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index.PNG)
+![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/detail.PNG)
 ## 2.程序架构
 名称   |  用途
 |------------:|-----------
@@ -9,6 +13,8 @@ server |  收集torrent数据
 worker | 收集Hash信息
 web    |  数据展示
 Tool   | 工具
+
+![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/framework.png)
 
 ## 3.安装
 1. 在安装环境前您需要配置golang环境  [Go](https://golang.org/) 下载地址
