@@ -21,6 +21,7 @@ import (
 	"github.com/fanpei91/bencode"
 	"github.com/fanpei91/metawire"
 	"github.com/go-ego/gse"
+	"github.com/go-redis/redis"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -78,62 +79,62 @@ func (sniffer *sn) handleData(data []byte) {
 		}
 
 	}
-	//ch <- s
 
 }
 
-func (sniffer *sn) NewServerConn() {
+func (sniffer *sn) ConnectNode(id int, node string) {
 	for {
-		conn, err := net.Dial("tcp", sniffer.Server)
-		fmt.Print("connect worker (", sniffer.Server+" ")
+		conn, err := net.Dial("tcp", node)
+		fmt.Print("connect worker (", node+" ")
 		if err != nil {
 			log.Println(") fail")
 		} else {
 			fmt.Println(") ok")
-			sniffer.Conn = conn
-			sniffer.Conn.Write([]byte(handshakePassword))
+			sniffer.Conn[id] = conn
+			sniffer.Conn[id].Write([]byte(handshakePassword))
 			break
 		}
 		time.Sleep(1 * time.Second)
 	}
 }
-func (sniffer *sn) Run() {
+func (sniffer *sn) NewServerConn() {
+	for id, node := range wkNodes {
+		go func(id int, node string) {
+			sniffer.ConnectNode(id, node)
+			for {
+				datarev := make([]byte, 100)
+				n, err := sniffer.Conn[id].Read(datarev[0:100])
+				if err != nil {
+					sniffer.ConnectNode(id, node)
+					continue
+				}
+			tag:
+				if n < 100 {
+					add := make([]byte, 100-n)
 
-	for {
-		datarev := make([]byte, 100)
-		n, err := sniffer.Conn.Read(datarev[0:100])
-		if err != nil {
-			sniffer.NewServerConn()
-			continue
-		}
-	tag:
-		if n < 100 {
-			add := make([]byte, 100-n)
+					j, err := sniffer.Conn[id].Read(add)
 
-			j, err := sniffer.Conn.Read(add)
+					if err != nil {
+						sniffer.ConnectNode(id, node)
+						continue
+					}
+					for k, i := range add {
+						datarev[n+k] = i
+					}
 
-			if err != nil {
-				sniffer.NewServerConn()
-				continue
+					n = n + j
+
+					if n < 100 {
+						goto tag
+					}
+
+				}
+				go sniffer.handleData(datarev[:n])
 			}
-			for k, i := range add {
-				datarev[n+k] = i
-			}
-
-			n = n + j
-
-			if n < 100 {
-				goto tag
-			}
-
-		}
-
-		go sniffer.handleData(datarev[:n])
+		}(id, node)
 
 	}
-
 }
-
 func (sniffer *sn) Reboot() {
 
 	for {
@@ -214,7 +215,7 @@ func (sniffer *sn) Metadata() {
 				return
 			}
 
-			sniffer.sussNum = sniffer.sussNum + 1 //不知道这样子对不对
+			sniffer.sussNum = sniffer.sussNum + 1
 			sniffer.hashList.Remove(torrent.InfoHash)
 			//sniffer.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
 			return
@@ -323,11 +324,28 @@ findName:
 }
 
 func (sniffer *sn) findHash(infohash string) (m map[string]interface{}, err error) {
-
-	c := sniffer.Mon.DB(dataBase).C(collection)
-
-	selector := bson.M{"infohash": infohash}
-	err = c.Find(selector).One(&m)
+	if redisEnable {
+		val, redisErr := sniffer.RedisClient.Get(infohash).Result()
+		if redisErr == redis.Nil {
+			c := sniffer.Mon.DB(dataBase).C(collection)
+			selector := bson.M{"infohash": infohash}
+			err = c.Find(selector).One(&m)
+			if m != nil {
+				sniffer.RedisClient.Set(infohash, m["_id"].(bson.ObjectId), 0)
+			}
+			return
+		} else if redisErr != nil {
+			c := sniffer.Mon.DB(dataBase).C(collection)
+			selector := bson.M{"infohash": infohash}
+			err = c.Find(selector).One(&m)
+		} else {
+			m["_id"] = bson.ObjectId(val)
+		}
+	} else {
+		c := sniffer.Mon.DB(dataBase).C(collection)
+		selector := bson.M{"infohash": infohash}
+		err = c.Find(selector).One(&m)
+	}
 	<-sniffer.mongoLimit
 	return
 }

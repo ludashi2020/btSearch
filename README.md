@@ -27,6 +27,7 @@ pip3 install elastic-doc-manager[elastic5]
 3. 服务端安装
 ```
 go get github.com/Bmixo/btSearch/server
+
 ```
 4. worker安装
 ```
@@ -138,6 +139,11 @@ worker运行
 go run github.com/Bmixo/btSearch/worker
 ```
 
+
+## 5.TODO
+
+加入redis选择
+加入d2-admin后台数据展示
 
 
 

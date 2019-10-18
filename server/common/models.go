@@ -2,6 +2,7 @@ package common
 
 import (
 	"github.com/Unknwon/goconfig"
+	"github.com/go-redis/redis"
 
 	"net"
 
@@ -16,14 +17,18 @@ var (
 	tdataChanSize        = 100
 	mongoConnectLimitNum = 100
 	mongoAddr            = ""
-	wkServer             = ""
+	wkNodes              = []string{}
 	handshakePassword    = ""
 	banList              = "banList.txt"
 	mongoUsername        = ""
 	mongoPassWord        = ""
 	dataBase             = ""
 	collection           = ""
+	redisEnable          = false
 	cfg                  *goconfig.ConfigFile
+	redisAddr            = ""
+	redisPassword        = ""
+	redisDB              = 0
 )
 
 var (
@@ -66,9 +71,10 @@ type sn struct {
 	tdataChan     chan tdata
 	hashList      mapset.Set
 	blackAddrList mapset.Set
-	Server        string
-	Conn          net.Conn
+	Nodes         []string
+	Conn          map[int]net.Conn
 	Mon           *mgo.Session
+	RedisClient   *redis.Client
 	mongoLimit    chan bool
 	collection    *mgo.Collection
 	revNum        float64
