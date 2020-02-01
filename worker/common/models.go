@@ -41,10 +41,11 @@ const (
 )
 
 type wkServer struct {
-	tcpListener net.Listener
-	client      net.Conn
+	// tcpListener net.Listener
+	Tool Tool
+	// client      net.Conn
 	revNum      float64
-	num         float64
+	sussNum     float64
 	dropNum     float64
 	findNodeNum float64
 	udpListener *net.UDPConn

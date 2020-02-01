@@ -5,12 +5,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"os"
 	"path"
 	"strconv"
@@ -18,122 +16,74 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com//Bmixo/btSearch/package/metawire"
+	"github.com/Bmixo/btSearch/header"
+
 	"github.com/Bmixo/btSearch/package/bencode"
+	"github.com/Bmixo/btSearch/package/metawire"
 	"github.com/go-ego/gse"
 	"github.com/go-redis/redis"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (sniffer *sn) handleData(data []byte) {
+func (sniffer *sn) handleData() {
+	for {
+		s := <-sniffer.Tool.ToolPostChan
 
-	var s tdata
-	err := json.Unmarshal(data, &s)
-
-	if err != nil {
-		return
-	}
-	sniffer.revNum = sniffer.revNum + 1
-	if sniffer.blackAddrList.Contains(s.Addr) {
-		return
-	}
-
-	//InfoHash := hex.EncodeToString(s.Hash)
-	InfoHash := s.Hash
-
-	if !sniffer.hashList.Contains(InfoHash) {
-		select {
-		case sniffer.mongoLimit <- true:
-		default:
-			sniffer.dropSpeed = sniffer.dropSpeed + 1
-			return
-		}
-		m, err := sniffer.findHash(InfoHash)
-		if err != nil && err != mgo.ErrNotFound {
-			sniffer.printChan <- ("ERR:4511" + err.Error())
+		sniffer.revNum = sniffer.revNum + 1
+		if sniffer.blackAddrList.Contains(s.Addr) {
 			return
 		}
 
-		if m != nil {
+		//InfoHash := hex.EncodeToString(s.Hash)
+		InfoHash := s.Hash
+
+		if !sniffer.hashList.Contains(InfoHash) {
 			select {
 			case sniffer.mongoLimit <- true:
 			default:
 				sniffer.dropSpeed = sniffer.dropSpeed + 1
 				return
 			}
-			sniffer.foundNum = sniffer.foundNum + 1
-			err = sniffer.updateTimeHot(m["_id"].(bson.ObjectId))
-			if err != nil {
-				sniffer.printChan <- ("ERR:0025" + err.Error())
+			m, err := sniffer.findHash(InfoHash)
+			if err != nil && err != mgo.ErrNotFound {
+				sniffer.printChan <- ("ERR:4511" + err.Error())
 				return
 			}
-		} else {
-			if len(sniffer.tdataChan) < 100 {
-				sniffer.tdataChan <- s
-				sniffer.hashList.Add(InfoHash)
+
+			if m != nil {
+				select {
+				case sniffer.mongoLimit <- true:
+				default:
+					sniffer.dropSpeed = sniffer.dropSpeed + 1
+					return
+				}
+				sniffer.foundNum = sniffer.foundNum + 1
+				err = sniffer.updateTimeHot(m["_id"].(bson.ObjectId))
+				if err != nil {
+					sniffer.printChan <- ("ERR:0025" + err.Error())
+					return
+				}
 			} else {
-				sniffer.dropSpeed = sniffer.dropSpeed + 1
+				if len(sniffer.tdataChan) < 100 {
+					sniffer.tdataChan <- s
+					sniffer.hashList.Add(InfoHash)
+				} else {
+					sniffer.dropSpeed = sniffer.dropSpeed + 1
+				}
+
 			}
 
 		}
-
-	}
-
-}
-
-func (sniffer *sn) ConnectNode(id int, node string) {
-	for {
-		conn, err := net.Dial("tcp", node)
-		fmt.Print("connect worker (", node+" ")
-		if err != nil {
-			log.Println(") fail")
-		} else {
-			fmt.Println(") ok")
-			sniffer.Conn[id] = conn
-			sniffer.Conn[id].Write([]byte(handshakePassword))
-			break
-		}
-		time.Sleep(1 * time.Second)
 	}
 }
 func (sniffer *sn) NewServerConn() {
-	for id, node := range wkNodes {
-		go func(id int, node string) {
-			sniffer.ConnectNode(id, node)
-			for {
-				datarev := make([]byte, 100)
-				n, err := sniffer.Conn[id].Read(datarev[0:100])
-				if err != nil {
-					sniffer.ConnectNode(id, node)
-					continue
-				}
-			tag:
-				if n < 100 {
-					add := make([]byte, 100-n)
-
-					j, err := sniffer.Conn[id].Read(add)
-
-					if err != nil {
-						sniffer.ConnectNode(id, node)
-						continue
-					}
-					for k, i := range add {
-						datarev[n+k] = i
-					}
-
-					n = n + j
-
-					if n < 100 {
-						goto tag
-					}
-
-				}
-				go sniffer.handleData(datarev[:n])
-			}
-		}(id, node)
-
+	for _, node := range wkNodes {
+		sniffer.Tool.Links = append(sniffer.Tool.Links, Link{Conn: nil, Addr: node, LinkPostChan: make(chan header.Tdata, 1000)})
 	}
+	go sniffer.handleData()
+	sniffer.Tool.LinksServe()
+
 }
 func (sniffer *sn) Reboot() {
 
@@ -168,7 +118,7 @@ func (sniffer *sn) CheckSpeed() {
 func (sniffer *sn) Metadata() {
 	for one := range sniffer.tdataChan {
 
-		go func(i tdata) {
+		go func(i header.Tdata) {
 			infoHash, err := hex.DecodeString(i.Hash)
 			if err != nil {
 				return
@@ -177,7 +127,7 @@ func (sniffer *sn) Metadata() {
 			peer := metawire.New(
 				string(infoHash),
 				i.Addr,
-				metawire.Timeout(10*time.Second),
+				metawire.Timeout(15*time.Second),
 			)
 			data, err := peer.Fetch()
 			if err != nil {

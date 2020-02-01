@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"crypto/rand"
 
+	"github.com/Bmixo/btSearch/header"
+
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net"
 	"strconv"
 	"time"
 
-	"github.com/fanpei91/bencode"
+	"github.com/Bmixo/btSearch/package/bencode"
 )
 
 func (wk *wkServer) HandleMsg() {
@@ -82,70 +83,18 @@ func (wk *wkServer) PrintLog() {
 }
 
 func (wk *wkServer) Server() {
-	for {
-		data := <-wk.dataChan
-		if wk.client == nil {
-			continue
-		}
-		bb, err := json.Marshal(data)
-		if err != nil {
-			continue
-		}
-		data.Offset = generEmptyString(100 - len(bb))
-		bb, err = json.Marshal(data)
-		if err != nil {
-			continue
-		}
-
-		_, err = wk.client.Write(bb)
-		if err != nil {
-			wk.printChan <- (err.Error())
-			wk.client.Close()
-			wk.client = nil
-		}
-
-	}
-}
-
-func (wk *wkServer) handleLogin(conn net.Conn) {
-	buf := make([]byte, 512)
-	n, err := conn.Read(buf)
-	if err != nil {
-		wk.printChan <- (err.Error())
-		return
-	}
-
-	if string(buf[:n]) == verifyPassord {
-		fmt.Printf("Hanshake receive from %s \n", conn.RemoteAddr().String())
-		wk.client = conn
-	} else {
-		wk.printChan <- ("Password wrong,Verify fail")
-		conn.Close()
-	}
+	wk.Tool.ToolServer(&wk.Tool)
 
 }
-
-func (wk *wkServer) HandleConn() {
-	for {
-		//等待客户端接入
-		conn, err := wk.tcpListener.Accept()
-		if err != nil {
-			wk.printChan <- (err.Error())
-		}
-		go wk.handleLogin(conn)
-
-	}
-}
-
 func (wk *wkServer) timer() {
 	for {
 
 		wk.printChan <- ("Rev: " + strconv.FormatFloat(wk.revNum, 'f', 3, 64) + "/sec" +
-			" Suss: " + strconv.FormatFloat(wk.num, 'f', 3, 64) + "/sec" + " FindNode: " +
+			" Suss: " + strconv.FormatFloat(wk.sussNum, 'f', 3, 64) + "/sec" + " FindNode: " +
 			strconv.FormatFloat(wk.findNodeNum, 'f', 3, 64) + "/sec" + " Drop: " +
 			strconv.FormatFloat(wk.dropNum, 'f', 3, 64) + "/sec")
 		wk.findNodeNum = 0
-		wk.num = 0
+		wk.sussNum = 0
 		wk.dropNum = 0
 		wk.revNum = 0
 		time.Sleep(time.Second)
@@ -167,11 +116,6 @@ func (wk *wkServer) onReply(dict *map[string]interface{}, from *net.UDPAddr) {
 		return
 	}
 	for _, node := range decodeNodes(nodes) {
-		// if len(wk.nodeChan) < nodeChanSize {
-		// 	wk.nodeChan <- node
-		// } else {
-		// 	wk.dropNum = wk.dropNum + 1
-		// }
 		if wk.node.Cardinality() < nodeChanSize {
 			wk.node.Add(node)
 		} else {
@@ -344,12 +288,10 @@ func (wk *wkServer) onAnnouncePeer(dict *map[string]interface{}, from *net.UDPAd
 	})
 
 	wk.udpListener.WriteTo(bencode.Encode(d), from)
-	// wk.udpListener.WriteTo(bencode.Encode(d), from)
-	wk.num = wk.num + 1
-	wk.dataChan <- tdata{
-		Hash:   hex.EncodeToString([]byte(infohash)),
-		Addr:   from.String(),
-		Offset: "",
+	wk.sussNum = wk.sussNum + 1
+	wk.Tool.ToolPostChan <- header.Tdata{
+		Hash: hex.EncodeToString([]byte(infohash)),
+		Addr: from.String(),
 	}
 
 }

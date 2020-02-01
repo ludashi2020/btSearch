@@ -1,0 +1,15 @@
+syntax = "proto3";
+package header;
+
+message Tdata {
+    string Hash=1;
+    string Addr=2;
+}
+
+message Verify {
+    string password=1;
+}
+
+service RPC {
+    rpc Communite(stream Verify) returns (stream Tdata){}
+}

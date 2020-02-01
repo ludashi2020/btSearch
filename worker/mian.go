@@ -6,11 +6,10 @@ import (
 
 func main() {
 	wk := common.NewServer()
-	go wk.HandleConn()
 	go wk.PrintLog()
 	go wk.FindNode()
-	go wk.Server()
 	go wk.GenerNodes()
 	go wk.AutoSendFindNode()
-	wk.HandleMsg()
+	go wk.HandleMsg()
+	wk.Server()
 }

@@ -48,10 +48,6 @@ func init() {
 }
 
 func NewServer() *wkServer {
-	tcplistener, err := net.Listen("tcp", listenerAddr)
-	if err != nil {
-		panic(err.Error())
-	}
 	udpAddr, err := net.ResolveUDPAddr("udp4", ":"+strconv.Itoa(udpPort))
 	if err != nil {
 		panic(err.Error())
@@ -62,8 +58,9 @@ func NewServer() *wkServer {
 		panic(err.Error())
 	}
 	return &wkServer{
-		tcpListener: tcplistener,
-		num:         0,
+		Tool: *NewTool(),
+		// tcpListener: tcplistener,
+		sussNum:     0,
 		revNum:      0,
 		dropNum:     0,
 		findNodeNum: 0,

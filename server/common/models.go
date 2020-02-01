@@ -1,10 +1,9 @@
 package common
 
 import (
+	"github.com/Bmixo/btSearch/header"
 	"github.com/Unknwon/goconfig"
 	"github.com/go-redis/redis"
-
-	"net"
 
 	mapset "github.com/deckarep/golang-set"
 
@@ -14,11 +13,12 @@ import (
 )
 
 var (
+	listenerAddr         = "0.0.0.0:9898"
 	tdataChanSize        = 100
 	mongoConnectLimitNum = 100
 	mongoAddr            = ""
 	wkNodes              = []string{}
-	handshakePassword    = ""
+	verifyPassord        = ""
 	banList              = "banList.txt"
 	mongoUsername        = ""
 	mongoPassWord        = ""
@@ -59,27 +59,22 @@ type bitTorrent struct {
 	FileType   string        `bson:"category"`
 	KeyWord    []string      `bson:"key_word"`
 }
-type tdata struct {
-	Hash   string
-	Addr   string
-	Offset string
-}
-
 type sn struct {
 	segmenter     gse.Segmenter
 	printChan     chan string
-	tdataChan     chan tdata
+	tdataChan     chan header.Tdata
 	hashList      mapset.Set
 	blackAddrList mapset.Set
 	Nodes         []string
-	Conn          map[int]net.Conn
-	Mon           *mgo.Session
-	RedisClient   *redis.Client
-	mongoLimit    chan bool
-	collection    *mgo.Collection
-	revNum        float64
-	dropSpeed     float64
-	sussNum       float64
-	foundNum      float64
-	blackList     []string
+	Tool          Tool
+	// Conn          map[int]net.Conn
+	Mon         *mgo.Session
+	RedisClient *redis.Client
+	mongoLimit  chan bool
+	collection  *mgo.Collection
+	revNum      float64
+	dropSpeed   float64
+	sussNum     float64
+	foundNum    float64
+	blackList   []string
 }

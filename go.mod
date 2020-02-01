@@ -12,6 +12,7 @@ require (
 	github.com/go-ego/gse v0.0.0-20200122160942-1a7fb4a3d3e2
 	github.com/go-redis/redis v6.15.6+incompatible
 	github.com/golang/protobuf v1.3.3
+	github.com/gorilla/websocket v1.4.1
 	gitlab.com/go-box/pongo2gin v0.0.0-20180611101114-fb2c4f0fe00f
 	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0

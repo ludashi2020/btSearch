@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Bmixo/btSearch/header"
 	"github.com/Unknwon/goconfig"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/go-ego/gse"
@@ -41,7 +42,7 @@ func init() {
 	checkErr(err)
 	mongoPassWord, err = cfg.GetValue("mongodb", "mpassword")
 	checkErr(err)
-	handshakePassword, err = cfg.GetValue("server", "handshakePassword")
+	verifyPassord, err = cfg.GetValue("server", "verifyPassord")
 	checkErr(err)
 	tmp, err := cfg.GetValue("server", "wkNodes")
 	checkErr(err)
@@ -108,10 +109,10 @@ func NewSniffer() *sn {
 	return &sn{
 		segmenter:     segmenter, //分词
 		printChan:     make(chan string, 5),
-		tdataChan:     make(chan tdata, tdataChanSize),
+		tdataChan:     make(chan header.Tdata, tdataChanSize),
 		hashList:      mapset.NewSet(),
 		blackAddrList: mapset.NewSet(),
-		Conn:          map[int]net.Conn{},
+		Tool:          *NewTool(),
 		Nodes:         wkNodes,
 		Mon:           session,
 		RedisClient:   redisClient,
