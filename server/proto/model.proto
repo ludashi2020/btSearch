@@ -1,0 +1,15 @@
+syntax = "proto3";
+package head;
+
+message Tdata {
+    string Hash=1;
+    string Addr=2;
+}
+
+message TdataResp {
+	string err =1;
+}
+
+service RPC {
+    rpc Send(stream Tdata) returns (stream TdataResp){}
+}

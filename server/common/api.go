@@ -18,8 +18,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/fanpei91/bencode"
-	"github.com/fanpei91/metawire"
+	"github.com//Bmixo/btSearch/package/metawire"
+	"github.com/Bmixo/btSearch/package/bencode"
 	"github.com/go-ego/gse"
 	"github.com/go-redis/redis"
 	mgo "gopkg.in/mgo.v2"
