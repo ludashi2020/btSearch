@@ -97,7 +97,8 @@ func (sniffer *sn) Reboot() {
 func (sniffer *sn) PrintLog() {
 
 	for {
-		fmt.Println(<-sniffer.printChan)
+		fmt.Printf("\r")
+		fmt.Printf("%s", <-sniffer.printChan)
 	}
 
 }

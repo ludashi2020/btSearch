@@ -14,10 +14,7 @@ require (
 	github.com/golang/protobuf v1.3.3
 	github.com/gorilla/websocket v1.4.1
 	gitlab.com/go-box/pongo2gin v0.0.0-20180611101114-fb2c4f0fe00f
-	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	golang.org/x/tools v0.0.0-20190524140312-2c0ae7006135 // indirect
 	google.golang.org/grpc v1.27.0
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
-	honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc // indirect
 )

@@ -78,7 +78,8 @@ func (wk *wkServer) FindNode() {
 func (wk *wkServer) PrintLog() {
 	go wk.timer()
 	for {
-		fmt.Println(<-wk.printChan)
+		fmt.Printf("\r")
+		fmt.Printf("%s", <-wk.printChan)
 	}
 }
 
