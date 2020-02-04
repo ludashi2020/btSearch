@@ -103,8 +103,6 @@ service mongod start
 
 
 
-
-
 ## 4.运行
 
 首先需要配置您的conf文件
@@ -141,9 +139,8 @@ go run github.com/Bmixo/btSearch/worker
 
 
 ## 5.TODO
-
-加入redis选择
-加入d2-admin后台数据展示
+- [ ] redis缓存
+- [ ] d2-admin后台数据展示
 
 
 
