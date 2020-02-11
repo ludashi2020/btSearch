@@ -47,7 +47,7 @@ func (sniffer *sn) handleData() {
 			}
 			m, err := sniffer.findHash(InfoHash)
 			if err != nil && err != mgo.ErrNotFound {
-				sniffer.printChan <- ("ERR:4511" + err.Error())
+				sniffer.printChan <- ("\n" + "ERR:4511" + err.Error() + "\n")
 				return
 			}
 
@@ -61,7 +61,7 @@ func (sniffer *sn) handleData() {
 				sniffer.foundNum = sniffer.foundNum + 1
 				err = sniffer.updateTimeHot(m["_id"].(bson.ObjectId))
 				if err != nil {
-					sniffer.printChan <- ("ERR:0025" + err.Error())
+					sniffer.printChan <- ("\n" + "ERR:0025" + err.Error() + "\n")
 					return
 				}
 			} else {
@@ -104,17 +104,25 @@ func (sniffer *sn) PrintLog() {
 }
 
 func (sniffer *sn) CheckSpeed() {
+	sussNum := 0
+	dropSpeed := 0
+	foundNum := 0
+	revNum := 0
 	for {
-		sniffer.printChan <- ("RevSpeed: " + strconv.FormatFloat(sniffer.revNum, 'f', 3, 64) + "/sec" +
-			" DropSpeed: " + strconv.FormatFloat(sniffer.dropSpeed, 'f', 3, 64) +
-			" FoundSpeed: " + strconv.FormatFloat(sniffer.foundNum, 'f', 3, 64) + "/sec" +
-			" SussSpeed: " + strconv.FormatFloat(sniffer.sussNum, 'f', 3, 64) + "/sec" +
-			" HashList:" + strconv.FormatInt(int64(sniffer.hashList.Cardinality()), 10) +
-			" blackAddrList:" + strconv.FormatInt(int64(sniffer.blackAddrList.Cardinality()), 10))
-		sniffer.sussNum = 0.0
-		sniffer.dropSpeed = 0.0
-		sniffer.foundNum = 0.0
-		sniffer.revNum = 0.0
+		sniffer.sussNum -= sussNum
+		sniffer.dropSpeed -= dropSpeed
+		sniffer.foundNum -= foundNum
+		sniffer.revNum -= revNum
+		sniffer.printChan <- ("RevSpeed: " + strconv.Itoa(sniffer.revNum) + "/sec" +
+			" DropSpeed: " + strconv.Itoa(sniffer.dropSpeed) + "/sec" +
+			" FoundSpeed: " + strconv.Itoa(sniffer.foundNum) + "/sec" +
+			" SussSpeed: " + strconv.Itoa(sniffer.sussNum) + "/sec" +
+			" HashList:" + strconv.Itoa(sniffer.hashList.Cardinality()) +
+			" blackAddrList:" + strconv.Itoa(sniffer.blackAddrList.Cardinality()))
+		sussNum = sniffer.sussNum
+		dropSpeed = sniffer.dropSpeed
+		foundNum = sniffer.foundNum
+		revNum = sniffer.revNum
 		time.Sleep(time.Second)
 	}
 
@@ -332,7 +340,7 @@ func loadBlackList() (blackList []string) {
 
 	if err != nil {
 		fi.Close()
-		log.Panicln("Error: %s\n", err)
+		log.Panicln("\nError: %s\n", err)
 		return []string{}
 	}
 	defer fi.Close()

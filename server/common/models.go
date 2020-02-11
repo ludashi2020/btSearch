@@ -72,9 +72,9 @@ type sn struct {
 	RedisClient *redis.Client
 	mongoLimit  chan bool
 	collection  *mgo.Collection
-	revNum      float64
-	dropSpeed   float64
-	sussNum     float64
-	foundNum    float64
+	revNum      int
+	dropSpeed   int
+	sussNum     int
+	foundNum    int
 	blackList   []string
 }
