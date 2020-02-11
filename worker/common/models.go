@@ -4,7 +4,6 @@ import (
 	"net"
 
 	"github.com/Unknwon/goconfig"
-	mapset "github.com/deckarep/golang-set"
 )
 
 type tdata struct {
@@ -25,7 +24,7 @@ var bootstapNodes = []string{
 
 var (
 	listenerAddr  = "0.0.0.0:9898"
-	maxNodeQsize  = 145000 //Nanoseconds
+	findNodeSpeed = 10000
 	nodeChanSize  = 10000
 	udpPort       = 6999
 	verifyPassord = ""
@@ -40,19 +39,24 @@ const (
 	secret           = "IYHJFR%^&IO"
 )
 
+type message struct {
+	buf  []byte
+	addr net.UDPAddr
+}
 type wkServer struct {
-	// tcpListener net.Listener
-	Tool Tool
-	// client      net.Conn
-	revNum      float64
-	sussNum     float64
-	dropNum     float64
-	findNodeNum float64
+	Tool        Tool
+	revNum      int
+	DecodeNum   int
+	sussNum     int
+	dropNum     int
+	findNodeNum int
 	udpListener *net.UDPConn
 	localID     string
-	node        mapset.Set
+	// node        mapset.Set
+	nodeChan    chan *node
 	kbucket     []*node
 	nodes       string
 	printChan   chan string
+	messageChan chan *message
 	dataChan    chan tdata
 }

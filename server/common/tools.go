@@ -37,7 +37,7 @@ func (self *Tool) Connect(i int) {
 		log.Printf("on connect: [%v]", self.Links[i].Addr)
 		self.Links[i].Conn, err = grpc.Dial(self.Links[i].Addr, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(time.Second*3))
 		if err != nil || self.Links[i].Conn == nil {
-			log.Printf("connect fail: [%v]", self.Links[i].Addr, err)
+			log.Printf("connect fail: [%v]", self.Links[i].Addr)
 			time.Sleep(time.Millisecond * 200)
 			goto reconnect
 		}
@@ -140,6 +140,7 @@ func (self *Tool) Communite(stream header.RPC_CommuniteServer) error {
 			data := <-self.ToolPostChan
 			err := stream.Send(&data)
 			if err != nil {
+				log.Println(ctx.Err().Error())
 				return ctx.Err()
 			}
 

@@ -8,8 +8,6 @@ import (
 	"strconv"
 
 	"github.com/Unknwon/goconfig"
-
-	mapset "github.com/deckarep/golang-set"
 )
 
 func checkErr(err error) {
@@ -18,7 +16,7 @@ func checkErr(err error) {
 	}
 }
 func init() {
-	confPath := flag.String("c", "config/server.conf", "worker config file")
+	confPath := flag.String("c", "config/worker.conf", "worker config file")
 
 	flag.Parse()
 
@@ -30,9 +28,9 @@ func init() {
 	cfg = config
 	listenerAddr, err = cfg.GetValue("worker", "listenerAddr")
 	checkErr(err)
-	maxNodeQsizeTmp, err := cfg.GetValue("worker", "maxNodeQsize")
+	findNodeSpeedTmp, err := cfg.GetValue("worker", "findNodeSpeed")
 	checkErr(err)
-	maxNodeQsize, err = strconv.Atoi(maxNodeQsizeTmp)
+	findNodeSpeed, err = strconv.Atoi(findNodeSpeedTmp)
 	checkErr(err)
 	nodeChanSizeTmp, err := cfg.GetValue("worker", "nodeChanSize")
 	checkErr(err)
@@ -58,19 +56,20 @@ func NewServer() *wkServer {
 		panic(err.Error())
 	}
 	return &wkServer{
-		Tool: *NewTool(),
-		// tcpListener: tcplistener,
+		Tool:        *NewTool(),
 		sussNum:     0,
 		revNum:      0,
 		dropNum:     0,
+		DecodeNum:   0,
 		findNodeNum: 0,
 		udpListener: udplistener,
 		localID:     string(randBytes(20)),
-		// nodeChan:    make(chan *node, nodeChanSize),
-		node:      mapset.NewSet(),
-		nodes:     "",
-		kbucket:   []*node{},
-		printChan: make(chan string, 5),
-		dataChan:  make(chan tdata, 5),
+		// node:        mapset.NewSet(),
+		nodeChan:    make(chan *node, nodeChanSize),
+		nodes:       "",
+		kbucket:     []*node{},
+		printChan:   make(chan string, 5),
+		messageChan: make(chan *message, nodeChanSize),
+		dataChan:    make(chan tdata, 5),
 	}
 }

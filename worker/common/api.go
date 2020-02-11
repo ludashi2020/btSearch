@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"crypto/rand"
 
+	randx "math/rand"
+
 	"github.com/Bmixo/btSearch/header"
 
 	"encoding/binary"
@@ -17,15 +19,26 @@ import (
 )
 
 func (wk *wkServer) HandleMsg() {
-	for {
-		buf := make([]byte, 512)
-		n, addr, err := wk.udpListener.ReadFromUDP(buf)
-		if err != nil {
-			wk.printChan <- (err.Error())
-			continue
-		}
-		wk.revNum = wk.revNum + 1
-		go wk.onMessage(buf[:n], addr)
+	for i := 0; i < 20; i++ {
+		go wk.onMessage()
+	}
+	for i := 0; i < 10; i++ {
+
+		go func() {
+			for {
+				buf := make([]byte, 512)
+				n, addr, err := wk.udpListener.ReadFromUDP(buf)
+				if err != nil {
+					wk.printChan <- (err.Error())
+					continue
+				}
+				wk.revNum = wk.revNum + 1
+				wk.messageChan <- &message{
+					buf:  buf[:n],
+					addr: *addr,
+				}
+			}
+		}()
 	}
 
 }
@@ -45,25 +58,19 @@ func decodeNodes(s string) (nodes []*node) {
 }
 
 func (wk *wkServer) AutoSendFindNode() {
-	wait := time.Duration(maxNodeQsize)
+	var one *node
 	for {
-		var one *node
-		if i := wk.node.Pop(); i != nil {
-			one = i.(*node)
-		} else {
-			continue
-		}
+		one = <-wk.nodeChan
 		wk.sendFindNode(one)
 		if len(wk.kbucket) < 8 {
 			wk.kbucket = append(wk.kbucket, one)
 		}
-		time.Sleep(wait)
 	}
 }
 
 func (wk *wkServer) FindNode() {
 	for {
-		if wk.node.Cardinality() == 0 {
+		if wk.findNodeNum == 0 {
 			for _, address := range bootstapNodes {
 				wk.printChan <- ("send to: " + address)
 				wk.sendFindNode(&node{
@@ -88,17 +95,29 @@ func (wk *wkServer) Server() {
 
 }
 func (wk *wkServer) timer() {
+	findNodeNumOld := 0
+	sussNumOld := 0
+	dropNumOld := 0
+	revNumOld := 0
+	decodeNumOld := 0
 	for {
+		wk.findNodeNum -= findNodeNumOld
+		wk.DecodeNum -= decodeNumOld
+		wk.sussNum -= sussNumOld
+		wk.dropNum -= dropNumOld
+		wk.revNum -= revNumOld
+		wk.printChan <- ("Rev: " + strconv.Itoa(wk.revNum) + "r/sec" +
+			" Decode: " + strconv.Itoa(wk.DecodeNum) + "r/sec" +
+			" Suss: " + strconv.Itoa(wk.sussNum) + "p/sec" + " FindNode: " +
+			strconv.Itoa(wk.findNodeNum) + "p/sec" + " Drop: " +
+			strconv.Itoa(wk.dropNum) + "r/sec")
+		findNodeNumOld = wk.findNodeNum
+		sussNumOld = wk.sussNum
+		dropNumOld = wk.dropNum
+		revNumOld = wk.revNum
+		decodeNumOld = wk.DecodeNum
 
-		wk.printChan <- ("Rev: " + strconv.FormatFloat(wk.revNum, 'f', 3, 64) + "/sec" +
-			" Suss: " + strconv.FormatFloat(wk.sussNum, 'f', 3, 64) + "/sec" + " FindNode: " +
-			strconv.FormatFloat(wk.findNodeNum, 'f', 3, 64) + "/sec" + " Drop: " +
-			strconv.FormatFloat(wk.dropNum, 'f', 3, 64) + "/sec")
-		wk.findNodeNum = 0
-		wk.sussNum = 0
-		wk.dropNum = 0
-		wk.revNum = 0
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 1)
 	}
 
 }
@@ -116,31 +135,17 @@ func (wk *wkServer) onReply(dict *map[string]interface{}, from *net.UDPAddr) {
 	if !ok {
 		return
 	}
-	for _, node := range decodeNodes(nodes) {
-		if wk.node.Cardinality() < nodeChanSize {
-			wk.node.Add(node)
-		} else {
-			wk.dropNum = wk.dropNum + 1
+	if len(wk.nodeChan) < nodeChanSize && wk.findNodeNum < findNodeSpeed {
+		for _, node := range decodeNodes(nodes) {
+			wk.nodeChan <- node
 		}
+
+	} else {
+		wk.dropNum = wk.dropNum + 1
 	}
 
 }
 
-//处理错误不写 爬虫没必要浪费资源
-// func makeErr(tid string, errCode int, errMsg string) map[string]interface{} {
-// 	dict := map[string]interface{}{
-// 		"t": tid,
-// 		"y": "e",
-// 		"e": []interface{}{errCode, errMsg},
-// 	}
-// 	return dict
-// }
-
-// func (wk *wkServer) playDead(dict map[string]interface{}, from *net.UDPAddr) {
-// 	tid := dict["t"].(string)
-// 	d := makeErr(tid, 202, "Server Error")
-// 	wk.udpListener.WriteTo(bencode.Encode(d), from)
-// }
 func (wk *wkServer) onQuery(dict *map[string]interface{}, from *net.UDPAddr) {
 	q, ok := (*dict)["q"]
 	if !ok {
@@ -174,36 +179,30 @@ func (wk *wkServer) onFindNode(dict *map[string]interface{}, from *net.UDPAddr) 
 	wk.udpListener.WriteTo(bencode.Encode(d), from)
 
 }
-func (wk *wkServer) onMessage(data []byte, from *net.UDPAddr) {
-
-	dict := map[string]interface{}{}
-	dict, err := bencode.Decode(bytes.NewBuffer(data))
-	if err != nil {
-		// wk.printChan <- ("Decode data err,90909" + err.Error())
-		return
-	}
-	// if err != nil {
-	// 	for i, j := range (*data)[:n] {
-	// 		if j == 110 && (*data)[i+1] == 111 && (*data)[i+2] == 100 && (*data)[i+3] == 101 && (*data)[i+4] == 115 {
-	// 			fmt.Println((*data)[:n])
-	// 			os.Exit(0)
-	// 		}
-	// 	}
-	// 	wk.printChan <- ("Decode data err,90909")
-	// 	return
-	// }
-	y, ok := dict["y"].(string)
-	if !ok {
-		return
-	}
-	switch y {
-	case "q":
-		wk.onQuery(&dict, from)
-	case "r": //,
-		wk.onReply(&dict, from)
-	//case "e": //处理错误不写 爬虫没必要浪费资源
-	default:
-		return
+func (wk *wkServer) onMessage() {
+	var data *message
+	for {
+		data = <-wk.messageChan
+		dict := map[string]interface{}{}
+		dict, err := bencode.Decode(bytes.NewBuffer(data.buf))
+		if err != nil {
+			// wk.printChan <- ("ERR 121213:" + err.Error())
+			continue
+		}
+		wk.DecodeNum++
+		y, ok := dict["y"].(string)
+		if !ok {
+			continue
+		}
+		switch y {
+		case "q":
+			wk.onQuery(&dict, &data.addr)
+		case "r": //,
+			wk.onReply(&dict, &data.addr)
+		//case "e": //处理错误不写 爬虫没必要浪费资源
+		default:
+			continue
+		}
 	}
 }
 func (wk *wkServer) onPing(dict *map[string]interface{}, from *net.UDPAddr) {
@@ -265,7 +264,6 @@ func (wk *wkServer) onAnnouncePeer(dict *map[string]interface{}, from *net.UDPAd
 	}
 	token, ok := a["token"].(string)
 	if !ok || token != genToken(from) {
-		//log.Println("validateToken fail")
 		return
 	}
 
@@ -290,6 +288,9 @@ func (wk *wkServer) onAnnouncePeer(dict *map[string]interface{}, from *net.UDPAd
 
 	wk.udpListener.WriteTo(bencode.Encode(d), from)
 	wk.sussNum = wk.sussNum + 1
+	if len(wk.Tool.ToolPostChan) == cap(wk.Tool.ToolPostChan) {
+		<-wk.Tool.ToolPostChan
+	}
 	wk.Tool.ToolPostChan <- header.Tdata{
 		Hash: hex.EncodeToString([]byte(infohash)),
 		Addr: from.String(),
@@ -340,6 +341,7 @@ func (wk *wkServer) sendFindNode(one *node) {
 	if err != nil {
 		return
 	}
+	randx.Seed(time.Now().Unix())
 	wk.udpListener.WriteTo(bencode.Encode(msg), addr)
 }
 

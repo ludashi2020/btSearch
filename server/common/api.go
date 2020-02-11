@@ -105,8 +105,12 @@ func (sniffer *sn) PrintLog() {
 
 func (sniffer *sn) CheckSpeed() {
 	for {
-		sniffer.printChan <- ("RevSpeed: " + strconv.FormatFloat(sniffer.revNum, 'f', 3, 64) + "/sec" + "\tDropSpeed: " + strconv.FormatFloat(sniffer.dropSpeed, 'f', 3, 64) + "\tFoundSpeed: " + strconv.FormatFloat(sniffer.foundNum, 'f', 3, 64) + "/sec" + "\tSussSpeed: " + strconv.FormatFloat(sniffer.sussNum, 'f', 3, 64) + "/sec")
-		sniffer.printChan <- ("HashList:" + strconv.FormatInt(int64(sniffer.hashList.Cardinality()), 10) + "  blackAddrList:" + strconv.FormatInt(int64(sniffer.blackAddrList.Cardinality()), 10) + " \n")
+		sniffer.printChan <- ("RevSpeed: " + strconv.FormatFloat(sniffer.revNum, 'f', 3, 64) + "/sec" +
+			" DropSpeed: " + strconv.FormatFloat(sniffer.dropSpeed, 'f', 3, 64) +
+			" FoundSpeed: " + strconv.FormatFloat(sniffer.foundNum, 'f', 3, 64) + "/sec" +
+			" SussSpeed: " + strconv.FormatFloat(sniffer.sussNum, 'f', 3, 64) + "/sec" +
+			" HashList:" + strconv.FormatInt(int64(sniffer.hashList.Cardinality()), 10) +
+			" blackAddrList:" + strconv.FormatInt(int64(sniffer.blackAddrList.Cardinality()), 10))
 		sniffer.sussNum = 0.0
 		sniffer.dropSpeed = 0.0
 		sniffer.foundNum = 0.0

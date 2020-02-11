@@ -140,6 +140,7 @@ func (self *Tool) Communite(stream header.RPC_CommuniteServer) error {
 			data := <-self.ToolPostChan
 			err := stream.Send(&data)
 			if err != nil {
+				log.Println(ctx.Err().Error())
 				return ctx.Err()
 			}
 
