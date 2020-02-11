@@ -16,6 +16,7 @@ var (
 	listenerAddr         = "0.0.0.0:9898"
 	tdataChanSize        = 100
 	mongoConnectLimitNum = 100
+	metadataNum          = 10
 	mongoAddr            = ""
 	wkNodes              = []string{}
 	verifyPassord        = ""
@@ -61,8 +62,6 @@ type bitTorrent struct {
 }
 type sn struct {
 	segmenter     gse.Segmenter
-	printChan     chan string
-	tdataChan     chan header.Tdata
 	hashList      mapset.Set
 	blackAddrList mapset.Set
 	Nodes         []string
@@ -70,11 +69,13 @@ type sn struct {
 	// Conn          map[int]net.Conn
 	Mon         *mgo.Session
 	RedisClient *redis.Client
-	mongoLimit  chan bool
 	collection  *mgo.Collection
 	revNum      int
 	dropSpeed   int
 	sussNum     int
 	foundNum    int
 	blackList   []string
+	mongoLimit  chan bool
+	printChan   chan string
+	tdataChan   chan header.Tdata
 }

@@ -129,61 +129,66 @@ func (sniffer *sn) CheckSpeed() {
 }
 
 func (sniffer *sn) Metadata() {
-	for one := range sniffer.tdataChan {
+	if metadataNum < 1 {
+		sniffer.printChan <- ("metadataNum error set defalut 10")
+	}
+	fmt.Println(metadataNum)
 
-		go func(i header.Tdata) {
-			infoHash, err := hex.DecodeString(i.Hash)
-			if err != nil {
-				return
-			}
-
-			peer := metawire.New(
-				string(infoHash),
-				i.Addr,
-				metawire.Timeout(15*time.Second),
-			)
-			data, err := peer.Fetch()
-			if err != nil {
-				sniffer.blackAddrList.Add(i.Addr)
-				return
-			}
-
-			torrent, err := sniffer.newTorrent(data, i.Hash)
-			if err != nil {
-				return
-			}
-
-			segments := sniffer.segmenter.Segment([]byte(torrent.Name))
-			for _, j := range gse.ToSlice(segments, false) {
-				if utf8.RuneCountInString(j) < 2 || utf8.RuneCountInString(j) > 15 {
+	for i := 0; i < metadataNum; i++ {
+		go func() {
+			for {
+				tdata := <-sniffer.tdataChan
+				infoHash, err := hex.DecodeString(tdata.Hash)
+				if err != nil {
 					continue
-				} else if len(torrent.KeyWord) > 10 {
-					break
-				} else {
-					if _, error := strconv.Atoi(j); error != nil {
-						torrent.KeyWord = append(torrent.KeyWord, j)
+				}
+
+				peer := metawire.New(
+					string(infoHash),
+					tdata.Addr,
+					metawire.Timeout(15*time.Second),
+				)
+				data, err := peer.Fetch()
+				if err != nil {
+					sniffer.blackAddrList.Add(tdata.Addr)
+					continue
+				}
+
+				torrent, err := sniffer.newTorrent(data, tdata.Hash)
+				if err != nil {
+					continue
+				}
+
+				segments := sniffer.segmenter.Segment([]byte(torrent.Name))
+				for _, j := range gse.ToSlice(segments, false) {
+					if utf8.RuneCountInString(j) < 2 || utf8.RuneCountInString(j) > 15 {
+						continue
+					} else if len(torrent.KeyWord) > 10 {
+						break
+					} else {
+						if _, error := strconv.Atoi(j); error != nil {
+							torrent.KeyWord = append(torrent.KeyWord, j)
+						}
 					}
 				}
-			}
-			// objectid, err := torrent.ID.MarshalText()
-			select {
-			case sniffer.mongoLimit <- true:
-			default:
-				sniffer.dropSpeed = sniffer.dropSpeed + 1
-				return
-			}
-			err = sniffer.syncmongodb(torrent)
+				select {
+				case sniffer.mongoLimit <- true:
+				default:
+					sniffer.dropSpeed = sniffer.dropSpeed + 1
+					continue
+				}
+				err = sniffer.syncmongodb(torrent)
 
-			if err != nil {
-				return
+				if err != nil {
+					continue
+				}
+
+				sniffer.sussNum = sniffer.sussNum + 1
+				sniffer.hashList.Remove(torrent.InfoHash)
+				//sniffer.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
+				continue
 			}
-
-			sniffer.sussNum = sniffer.sussNum + 1
-			sniffer.hashList.Remove(torrent.InfoHash)
-			//sniffer.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
-			return
-
-		}(one)
+		}()
 	}
 
 }
