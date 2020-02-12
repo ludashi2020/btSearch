@@ -39,16 +39,17 @@ func randomPeerID() string {
 }
 
 type Wire struct {
-	infohash     string
-	from         string
-	peerID       string
-	conn         *net.TCPConn
-	timeout      time.Duration
-	metadataSize int
-	utMetadata   int
-	numOfPieces  int
-	pieces       [][]byte
-	err          error
+	infohash       string
+	from           string
+	peerID         string
+	conn           *net.TCPConn
+	tcpDialTimeout time.Duration
+	timeout        time.Duration
+	metadataSize   int
+	utMetadata     int
+	numOfPieces    int
+	pieces         [][]byte
+	err            error
 }
 
 type option func(w *Wire)
@@ -66,10 +67,11 @@ func Timeout(t time.Duration) option {
 
 func New(infohash string, from string, options ...option) *Wire {
 	w := &Wire{
-		infohash: infohash,
-		from:     from,
-		peerID:   randomPeerID(),
-		timeout:  5 * time.Second,
+		infohash:       infohash,
+		from:           from,
+		peerID:         randomPeerID(),
+		tcpDialTimeout: time.Second * 1,
+		timeout:        5 * time.Second,
 	}
 	for _, option := range options {
 		option(w)
@@ -90,7 +92,7 @@ func (w *Wire) connect(ctx context.Context) {
 		return
 	default:
 	}
-	conn, err := net.DialTimeout("tcp", w.from, w.timeout)
+	conn, err := net.DialTimeout("tcp", w.from, w.tcpDialTimeout)
 	if err != nil {
 		w.err = fmt.Errorf("metawire: connect to remote peer failed: %v", err)
 		return

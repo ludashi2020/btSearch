@@ -6,11 +6,11 @@ import (
 
 func main() {
 
-	sniffer := common.NewSniffer()
-	defer sniffer.Mon.Close()
-	go sniffer.PrintLog()
-	go sniffer.NewServerConn()
-	go sniffer.Reboot()
-	go sniffer.Metadata()
-	sniffer.CheckSpeed()
+	self := common.NewSniffer()
+	defer self.Mon.Close()
+	go self.PrintLog()
+	go self.NewServerConn()
+	go self.Reboot()
+	go self.Metadata()
+	self.CheckSpeed()
 }

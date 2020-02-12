@@ -26,118 +26,118 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (sniffer *sn) handleData() {
+func (self *sn) handleData() {
+	tdataChanCap := cap(self.tdataChan)
 	for {
-		s := <-sniffer.Tool.ToolPostChan
+		s := <-self.Tool.ToolPostChan
 
-		sniffer.revNum = sniffer.revNum + 1
-		if sniffer.blackAddrList.Contains(s.Addr) {
-			return
+		self.revNum++
+		if self.blackAddrList.Contains(s.Addr) {
+			continue
 		}
 
-		//InfoHash := hex.EncodeToString(s.Hash)
 		InfoHash := s.Hash
 
-		if !sniffer.hashList.Contains(InfoHash) {
-			select {
-			case sniffer.mongoLimit <- true:
-			default:
-				sniffer.dropSpeed = sniffer.dropSpeed + 1
-				return
-			}
-			m, err := sniffer.findHash(InfoHash)
-			if err != nil && err != mgo.ErrNotFound {
-				sniffer.printChan <- ("\n" + "ERR:4511" + err.Error() + "\n")
-				return
-			}
-
-			if m != nil {
-				select {
-				case sniffer.mongoLimit <- true:
-				default:
-					sniffer.dropSpeed = sniffer.dropSpeed + 1
-					return
-				}
-				sniffer.foundNum = sniffer.foundNum + 1
-				err = sniffer.updateTimeHot(m["_id"].(bson.ObjectId))
-				if err != nil {
-					sniffer.printChan <- ("\n" + "ERR:0025" + err.Error() + "\n")
-					return
-				}
-			} else {
-				if len(sniffer.tdataChan) < 100 {
-					sniffer.tdataChan <- s
-					sniffer.hashList.Add(InfoHash)
-				} else {
-					sniffer.dropSpeed = sniffer.dropSpeed + 1
-				}
-
-			}
-
+		if self.hashList.Contains(InfoHash) {
+			continue
 		}
+		select {
+		case self.mongoLimit <- true:
+		default:
+			self.dropSpeed++
+			continue
+		}
+		m, err := self.findHash(InfoHash)
+		if err != nil && err != mgo.ErrNotFound {
+			self.printChan <- ("\n" + "ERR:4511" + err.Error() + "\n")
+			continue
+		}
+
+		if m != nil {
+			select {
+			case self.mongoLimit <- true:
+			default:
+				self.dropSpeed++
+				continue
+			}
+			self.foundNum++
+			err = self.updateTimeHot(m["_id"].(bson.ObjectId))
+			if err != nil {
+				self.printChan <- ("\n" + "update time hot ERR:0025" + err.Error() + "\n")
+				continue
+			}
+			continue
+		}
+		if len(self.tdataChan) < tdataChanCap {
+			self.tdataChan <- s
+			self.hashList.Add(InfoHash)
+		} else {
+			self.dropSpeed++
+		}
+
 	}
 }
-func (sniffer *sn) NewServerConn() {
+func (self *sn) NewServerConn() {
 	for _, node := range wkNodes {
-		sniffer.Tool.Links = append(sniffer.Tool.Links, Link{Conn: nil, Addr: node, LinkPostChan: make(chan header.Tdata, 1000)})
+		self.Tool.Links = append(self.Tool.Links, Link{Conn: nil, Addr: node, LinkPostChan: make(chan header.Tdata, 1000)})
 	}
-	go sniffer.handleData()
-	sniffer.Tool.LinksServe()
+	for i := 0; i < 10; i++ {
+		go self.handleData()
+	}
+	self.Tool.LinksServe()
 
 }
-func (sniffer *sn) Reboot() {
+func (self *sn) Reboot() {
 
 	for {
 		time.Sleep(time.Second * 240)
-		sniffer.blackAddrList.Clear()
-		sniffer.hashList.Clear()
+		self.blackAddrList.Clear()
+		self.hashList.Clear()
 	}
 
 }
-func (sniffer *sn) PrintLog() {
+func (self *sn) PrintLog() {
 
 	for {
 		fmt.Printf("\r")
-		fmt.Printf("%s", <-sniffer.printChan)
+		fmt.Printf("%s", <-self.printChan)
 	}
 
 }
 
-func (sniffer *sn) CheckSpeed() {
+func (self *sn) CheckSpeed() {
 	sussNum := 0
 	dropSpeed := 0
 	foundNum := 0
 	revNum := 0
 	for {
-		sniffer.sussNum -= sussNum
-		sniffer.dropSpeed -= dropSpeed
-		sniffer.foundNum -= foundNum
-		sniffer.revNum -= revNum
-		sniffer.printChan <- ("RevSpeed: " + strconv.Itoa(sniffer.revNum) + "/sec" +
-			" DropSpeed: " + strconv.Itoa(sniffer.dropSpeed) + "/sec" +
-			" FoundSpeed: " + strconv.Itoa(sniffer.foundNum) + "/sec" +
-			" SussSpeed: " + strconv.Itoa(sniffer.sussNum) + "/sec" +
-			" HashList:" + strconv.Itoa(sniffer.hashList.Cardinality()) +
-			" blackAddrList:" + strconv.Itoa(sniffer.blackAddrList.Cardinality()))
-		sussNum = sniffer.sussNum
-		dropSpeed = sniffer.dropSpeed
-		foundNum = sniffer.foundNum
-		revNum = sniffer.revNum
+		self.sussNum -= sussNum
+		self.dropSpeed -= dropSpeed
+		self.foundNum -= foundNum
+		self.revNum -= revNum
+		self.printChan <- ("RevSpeed: " + strconv.Itoa(self.revNum) + "/sec" +
+			" DropSpeed: " + strconv.Itoa(self.dropSpeed) + "/sec" +
+			" FoundSpeed: " + strconv.Itoa(self.foundNum) + "/sec" +
+			" SussSpeed: " + strconv.Itoa(self.sussNum) + "/sec" +
+			" HashList:" + strconv.Itoa(self.hashList.Cardinality()) +
+			" blackAddrList:" + strconv.Itoa(self.blackAddrList.Cardinality()))
+		sussNum = self.sussNum
+		dropSpeed = self.dropSpeed
+		foundNum = self.foundNum
+		revNum = self.revNum
 		time.Sleep(time.Second)
 	}
 
 }
 
-func (sniffer *sn) Metadata() {
+func (self *sn) Metadata() {
 	if metadataNum < 1 {
-		sniffer.printChan <- ("metadataNum error set defalut 10")
+		self.printChan <- ("metadataNum error set defalut 10")
 	}
-	fmt.Println(metadataNum)
-
 	for i := 0; i < metadataNum; i++ {
 		go func() {
 			for {
-				tdata := <-sniffer.tdataChan
+				tdata := <-self.tdataChan
 				infoHash, err := hex.DecodeString(tdata.Hash)
 				if err != nil {
 					continue
@@ -146,20 +146,21 @@ func (sniffer *sn) Metadata() {
 				peer := metawire.New(
 					string(infoHash),
 					tdata.Addr,
-					metawire.Timeout(15*time.Second),
+					metawire.Timeout(time.Second*1),
+					metawire.Timeout(time.Second*3),
 				)
 				data, err := peer.Fetch()
 				if err != nil {
-					sniffer.blackAddrList.Add(tdata.Addr)
+					self.blackAddrList.Add(tdata.Addr)
 					continue
 				}
 
-				torrent, err := sniffer.newTorrent(data, tdata.Hash)
+				torrent, err := self.newTorrent(data, tdata.Hash)
 				if err != nil {
 					continue
 				}
 
-				segments := sniffer.segmenter.Segment([]byte(torrent.Name))
+				segments := self.segmenter.Segment([]byte(torrent.Name))
 				for _, j := range gse.ToSlice(segments, false) {
 					if utf8.RuneCountInString(j) < 2 || utf8.RuneCountInString(j) > 15 {
 						continue
@@ -172,20 +173,20 @@ func (sniffer *sn) Metadata() {
 					}
 				}
 				select {
-				case sniffer.mongoLimit <- true:
+				case self.mongoLimit <- true:
 				default:
-					sniffer.dropSpeed = sniffer.dropSpeed + 1
+					self.dropSpeed++
 					continue
 				}
-				err = sniffer.syncmongodb(torrent)
+				err = self.syncmongodb(torrent)
 
 				if err != nil {
 					continue
 				}
 
-				sniffer.sussNum = sniffer.sussNum + 1
-				sniffer.hashList.Remove(torrent.InfoHash)
-				//sniffer.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
+				self.sussNum++
+				self.hashList.Remove(torrent.InfoHash)
+				//self.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
 				continue
 			}
 		}()
@@ -193,7 +194,7 @@ func (sniffer *sn) Metadata() {
 
 }
 
-func (sniffer *sn) newTorrent(metadata []byte, InfoHash string) (torrent bitTorrent, err error) {
+func (self *sn) newTorrent(metadata []byte, InfoHash string) (torrent bitTorrent, err error) {
 	info, err := bencode.Decode(bytes.NewBuffer(metadata))
 	if err != nil {
 		return bitTorrent{}, err
@@ -210,7 +211,7 @@ func (sniffer *sn) newTorrent(metadata []byte, InfoHash string) (torrent bitTorr
 		return bitTorrent{}, errors.New("interface conversion: interface {} is int64, not string,90099")
 	}
 
-	for _, black := range sniffer.blackList {
+	for _, black := range self.blackList {
 		if strings.Contains(info["name"].(string), black) {
 
 			return bitTorrent{}, errors.New("Metadata Name is in Blacklist")
@@ -291,44 +292,44 @@ findName:
 
 }
 
-func (sniffer *sn) findHash(infohash string) (m map[string]interface{}, err error) {
+func (self *sn) findHash(infohash string) (m map[string]interface{}, err error) {
 	if redisEnable {
-		val, redisErr := sniffer.RedisClient.Get(infohash).Result()
+		val, redisErr := self.RedisClient.Get(infohash).Result()
 		if redisErr == redis.Nil {
-			c := sniffer.Mon.DB(dataBase).C(collection)
+			c := self.Mon.DB(dataBase).C(collection)
 			selector := bson.M{"infohash": infohash}
 			err = c.Find(selector).One(&m)
 			if m != nil {
-				sniffer.RedisClient.Set(infohash, m["_id"].(bson.ObjectId), 0)
+				self.RedisClient.Set(infohash, m["_id"].(bson.ObjectId), 0)
 			}
 			return
 		} else if redisErr != nil {
-			c := sniffer.Mon.DB(dataBase).C(collection)
+			c := self.Mon.DB(dataBase).C(collection)
 			selector := bson.M{"infohash": infohash}
 			err = c.Find(selector).One(&m)
 		} else {
 			m["_id"] = bson.ObjectId(val)
 		}
 	} else {
-		c := sniffer.Mon.DB(dataBase).C(collection)
+		c := self.Mon.DB(dataBase).C(collection)
 		selector := bson.M{"infohash": infohash}
 		err = c.Find(selector).One(&m)
 	}
-	<-sniffer.mongoLimit
+	<-self.mongoLimit
 	return
 }
 
-func (sniffer *sn) syncmongodb(data bitTorrent) (err error) {
+func (self *sn) syncmongodb(data bitTorrent) (err error) {
 
-	c := sniffer.Mon.DB(dataBase).C(collection)
+	c := self.Mon.DB(dataBase).C(collection)
 	err = c.Insert(data)
-	<-sniffer.mongoLimit
+	<-self.mongoLimit
 	return
 }
 
-func (sniffer *sn) updateTimeHot(objectID bson.ObjectId) (err error) {
+func (self *sn) updateTimeHot(objectID bson.ObjectId) (err error) {
 
-	c := sniffer.Mon.DB(dataBase).C(collection)
+	c := self.Mon.DB(dataBase).C(collection)
 
 	m := make(map[string]interface{})
 	m["$inc"] = map[string]int{"hot": 1}
@@ -336,7 +337,7 @@ func (sniffer *sn) updateTimeHot(objectID bson.ObjectId) (err error) {
 
 	selector := bson.M{"_id": objectID}
 	err = c.Update(selector, m)
-	<-sniffer.mongoLimit
+	<-self.mongoLimit
 	return
 }
 
