@@ -18,22 +18,22 @@ import (
 	"github.com/Bmixo/btSearch/package/bencode"
 )
 
-func (wk *wkServer) HandleMsg() {
+func (self *Worker) HandleMsg() {
 	for i := 0; i < 20; i++ {
-		go wk.onMessage()
+		go self.onMessage()
 	}
 	for i := 0; i < 10; i++ {
 
 		go func() {
 			for {
 				buf := make([]byte, 512)
-				n, addr, err := wk.udpListener.ReadFromUDP(buf)
+				n, addr, err := self.udpListener.ReadFromUDP(buf)
 				if err != nil {
-					wk.printChan <- (err.Error())
+					self.printChan <- (err.Error())
 					continue
 				}
-				wk.revNum = wk.revNum + 1
-				wk.messageChan <- &message{
+				self.revNum = self.revNum + 1
+				self.messageChan <- &message{
 					buf:  buf[:n],
 					addr: *addr,
 				}
@@ -57,72 +57,72 @@ func decodeNodes(s string) (nodes []*node) {
 	return
 }
 
-func (wk *wkServer) AutoSendFindNode() {
+func (self *Worker) AutoSendFindNode() {
 	var one *node
 	for {
-		one = <-wk.nodeChan
-		wk.sendFindNode(one)
-		if len(wk.kbucket) < 8 {
-			wk.kbucket = append(wk.kbucket, one)
+		one = <-self.nodeChan
+		self.sendFindNode(one)
+		if len(self.kbucket) < 8 {
+			self.kbucket = append(self.kbucket, one)
 		}
 	}
 }
 
-func (wk *wkServer) FindNode() {
+func (self *Worker) FindNode() {
 	for {
-		if wk.findNodeNum == 0 {
+		if self.findNodeNum == 0 {
 			for _, address := range bootstapNodes {
-				wk.printChan <- ("send to: " + address)
-				wk.sendFindNode(&node{
+				self.printChan <- ("send to: " + address)
+				self.sendFindNode(&node{
 					addr: address,
-					id:   wk.localID,
+					id:   self.localID,
 				})
 			}
 		}
 		time.Sleep(5 * time.Second)
 	}
 }
-func (wk *wkServer) PrintLog() {
-	go wk.timer()
+func (self *Worker) PrintLog() {
+	go self.timer()
 	for {
 		fmt.Printf("\r")
-		fmt.Printf("%s", <-wk.printChan)
+		fmt.Printf("%s", <-self.printChan)
 	}
 }
 
-func (wk *wkServer) Server() {
-	wk.Tool.ToolServer(&wk.Tool)
+func (self *Worker) Server() {
+	self.Tool.ToolServer(&self.Tool)
 
 }
-func (wk *wkServer) timer() {
+func (self *Worker) timer() {
 	findNodeNumOld := 0
 	sussNumOld := 0
 	dropNumOld := 0
 	revNumOld := 0
 	decodeNumOld := 0
 	for {
-		wk.findNodeNum -= findNodeNumOld
-		wk.DecodeNum -= decodeNumOld
-		wk.sussNum -= sussNumOld
-		wk.dropNum -= dropNumOld
-		wk.revNum -= revNumOld
-		wk.printChan <- ("Rev: " + strconv.Itoa(wk.revNum) + "r/sec" +
-			" Decode: " + strconv.Itoa(wk.DecodeNum) + "r/sec" +
-			" Suss: " + strconv.Itoa(wk.sussNum) + "p/sec" + " FindNode: " +
-			strconv.Itoa(wk.findNodeNum) + "p/sec" + " Drop: " +
-			strconv.Itoa(wk.dropNum) + "r/sec")
-		findNodeNumOld = wk.findNodeNum
-		sussNumOld = wk.sussNum
-		dropNumOld = wk.dropNum
-		revNumOld = wk.revNum
-		decodeNumOld = wk.DecodeNum
+		self.findNodeNum -= findNodeNumOld
+		self.DecodeNum -= decodeNumOld
+		self.sussNum -= sussNumOld
+		self.dropNum -= dropNumOld
+		self.revNum -= revNumOld
+		self.printChan <- ("Rev: " + strconv.Itoa(self.revNum) + "r/sec" +
+			" Decode: " + strconv.Itoa(self.DecodeNum) + "r/sec" +
+			" Suss: " + strconv.Itoa(self.sussNum) + "p/sec" + " FindNode: " +
+			strconv.Itoa(self.findNodeNum) + "p/sec" + " Drop: " +
+			strconv.Itoa(self.dropNum) + "r/sec")
+		findNodeNumOld = self.findNodeNum
+		sussNumOld = self.sussNum
+		dropNumOld = self.dropNum
+		revNumOld = self.revNum
+		decodeNumOld = self.DecodeNum
 
 		time.Sleep(time.Second * 1)
 	}
 
 }
 
-func (wk *wkServer) onReply(dict *map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onReply(dict *map[string]interface{}, from *net.UDPAddr) {
 	// tid, ok := (*dict)["t"].(string)
 	// if !ok {
 	// 	return
@@ -135,86 +135,86 @@ func (wk *wkServer) onReply(dict *map[string]interface{}, from *net.UDPAddr) {
 	if !ok {
 		return
 	}
-	if len(wk.nodeChan) < nodeChanSize && wk.findNodeNum < findNodeSpeed {
+	if len(self.nodeChan) < nodeChanSize && self.findNodeNum < findNodeSpeed {
 		for _, node := range decodeNodes(nodes) {
-			wk.nodeChan <- node
+			self.nodeChan <- node
 		}
 
 	} else {
-		wk.dropNum = wk.dropNum + 1
+		self.dropNum = self.dropNum + 1
 	}
 
 }
 
-func (wk *wkServer) onQuery(dict *map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onQuery(dict *map[string]interface{}, from *net.UDPAddr) {
 	q, ok := (*dict)["q"]
 	if !ok {
-		wk.printChan <- ("dict q err,788990")
+		self.printChan <- ("dict q err,788990")
 		return
 	}
 	switch q {
 	case pingType:
-		wk.onPing(dict, from)
+		self.onPing(dict, from)
 	case findNodeType:
-		wk.onFindNode(dict, from)
+		self.onFindNode(dict, from)
 	case getPeersType:
-		wk.onGetPeers(*dict, from)
+		self.onGetPeers(*dict, from)
 	case announcePeerType:
-		wk.onAnnouncePeer(dict, from)
+		self.onAnnouncePeer(dict, from)
 		// default:
-		// 	wk.playDead(dict, from)
+		// 	self.playDead(dict, from)
 	}
 }
 
-func (wk *wkServer) onFindNode(dict *map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onFindNode(dict *map[string]interface{}, from *net.UDPAddr) {
 	// c := 1
 	tid, ok := (*dict)["t"].(string)
 	if !ok {
 		return
 	}
 	d := makeReply(tid, map[string]interface{}{
-		"id":    string(randBytes(2)), //wk.localID,
-		"nodes": wk.nodes,
+		"id":    string(randBytes(2)), //self.localID,
+		"nodes": self.nodes,
 	})
-	wk.udpListener.WriteTo(bencode.Encode(d), from)
+	self.udpListener.WriteTo(bencode.Encode(d), from)
 
 }
-func (wk *wkServer) onMessage() {
+func (self *Worker) onMessage() {
 	var data *message
 	for {
-		data = <-wk.messageChan
+		data = <-self.messageChan
 		dict := map[string]interface{}{}
 		dict, err := bencode.Decode(bytes.NewBuffer(data.buf))
 		if err != nil {
-			// wk.printChan <- ("ERR 121213:" + err.Error())
+			// self.printChan <- ("ERR 121213:" + err.Error())
 			continue
 		}
-		wk.DecodeNum++
+		self.DecodeNum++
 		y, ok := dict["y"].(string)
 		if !ok {
 			continue
 		}
 		switch y {
 		case "q":
-			wk.onQuery(&dict, &data.addr)
+			self.onQuery(&dict, &data.addr)
 		case "r": //,
-			wk.onReply(&dict, &data.addr)
+			self.onReply(&dict, &data.addr)
 		//case "e": //处理错误不写 爬虫没必要浪费资源
 		default:
 			continue
 		}
 	}
 }
-func (wk *wkServer) onPing(dict *map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onPing(dict *map[string]interface{}, from *net.UDPAddr) {
 	tid, ok := (*dict)["t"].(string)
 	if !ok {
 		return
 	}
 	d := makeReply(tid, map[string]interface{}{
-		"id": wk.localID,
+		"id": self.localID,
 	})
 
-	wk.udpListener.WriteTo(bencode.Encode(d), from)
+	self.udpListener.WriteTo(bencode.Encode(d), from)
 }
 func makeReply(tid string, r map[string]interface{}) map[string]interface{} {
 	dict := map[string]interface{}{
@@ -232,7 +232,7 @@ func genToken(from *net.UDPAddr) string {
 	// return string(sha1.Sum(nil))
 }
 
-func (wk *wkServer) onGetPeers(dict map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onGetPeers(dict map[string]interface{}, from *net.UDPAddr) {
 
 	t := dict["t"].(string)
 	a, ok := dict["a"].(map[string]interface{})
@@ -244,16 +244,16 @@ func (wk *wkServer) onGetPeers(dict map[string]interface{}, from *net.UDPAddr) {
 		return
 	}
 	d := makeReply(t, map[string]interface{}{
-		"id":    string(neighborID(id, wk.localID)),
-		"nodes": wk.nodes,
+		"id":    string(neighborID(id, self.localID)),
+		"nodes": self.nodes,
 		"token": genToken(from),
 	})
 
-	wk.udpListener.WriteTo(bencode.Encode(d), from)
+	self.udpListener.WriteTo(bencode.Encode(d), from)
 
 }
 
-func (wk *wkServer) onAnnouncePeer(dict *map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onAnnouncePeer(dict *map[string]interface{}, from *net.UDPAddr) {
 	tid, ok := (*dict)["t"].(string)
 	if !ok {
 		return
@@ -283,15 +283,15 @@ func (wk *wkServer) onAnnouncePeer(dict *map[string]interface{}, from *net.UDPAd
 		from.Port = int(fromPort)
 	}
 	d := makeReply(tid, map[string]interface{}{
-		"id": wk.localID,
+		"id": self.localID,
 	})
 
-	wk.udpListener.WriteTo(bencode.Encode(d), from)
-	wk.sussNum = wk.sussNum + 1
-	if len(wk.Tool.ToolPostChan) == cap(wk.Tool.ToolPostChan) {
-		<-wk.Tool.ToolPostChan
+	self.udpListener.WriteTo(bencode.Encode(d), from)
+	self.sussNum = self.sussNum + 1
+	if len(self.Tool.ToolPostChan) == cap(self.Tool.ToolPostChan) {
+		<-self.Tool.ToolPostChan
 	}
-	wk.Tool.ToolPostChan <- header.Tdata{
+	self.Tool.ToolPostChan <- header.Tdata{
 		Hash: hex.EncodeToString([]byte(infohash)),
 		Addr: from.String(),
 	}
@@ -331,10 +331,10 @@ func makeQuery(tid string, q string, a map[string]interface{}) map[string]interf
 	return dict
 }
 
-func (wk *wkServer) sendFindNode(one *node) {
-	wk.findNodeNum = wk.findNodeNum + 1
+func (self *Worker) sendFindNode(one *node) {
+	self.findNodeNum = self.findNodeNum + 1
 	msg := makeQuery(secret+one.addr[:4], "find_node", map[string]interface{}{
-		"id":     neighborID(one.id, wk.localID),
+		"id":     neighborID(one.id, self.localID),
 		"target": string(randBytes(20)),
 	})
 	addr, err := net.ResolveUDPAddr("udp4", one.addr)
@@ -342,7 +342,7 @@ func (wk *wkServer) sendFindNode(one *node) {
 		return
 	}
 	randx.Seed(time.Now().Unix())
-	wk.udpListener.WriteTo(bencode.Encode(msg), addr)
+	self.udpListener.WriteTo(bencode.Encode(msg), addr)
 }
 
 func nodeToString(nodes []*node) (result string) {
@@ -357,11 +357,11 @@ func nodeToString(nodes []*node) (result string) {
 	return result
 }
 
-func (wk *wkServer) GenerNodes() {
+func (self *Worker) GenerNodes() {
 	for {
-		if len(wk.kbucket) >= 8 {
-			wk.nodes = nodeToString(wk.kbucket)
-			wk.kbucket = []*node{}
+		if len(self.kbucket) >= 8 {
+			self.nodes = nodeToString(self.kbucket)
+			self.kbucket = []*node{}
 			time.Sleep(time.Minute)
 		}
 		time.Sleep(5)

@@ -43,7 +43,7 @@ type message struct {
 	buf  []byte
 	addr net.UDPAddr
 }
-type wkServer struct {
+type Worker struct {
 	Tool        Tool
 	revNum      int
 	DecodeNum   int

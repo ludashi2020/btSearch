@@ -5,11 +5,11 @@ import (
 )
 
 func main() {
-	wk := common.NewServer()
-	go wk.PrintLog()
-	go wk.FindNode()
-	go wk.GenerNodes()
-	go wk.AutoSendFindNode()
-	go wk.HandleMsg()
-	wk.Server()
+	self := common.NewServer()
+	go self.PrintLog()
+	go self.FindNode()
+	go self.GenerNodes()
+	go self.AutoSendFindNode()
+	go self.HandleMsg()
+	self.Server()
 }

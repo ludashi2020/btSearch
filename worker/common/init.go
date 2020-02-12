@@ -45,7 +45,7 @@ func init() {
 
 }
 
-func NewServer() *wkServer {
+func NewServer() *Worker {
 	udpAddr, err := net.ResolveUDPAddr("udp4", ":"+strconv.Itoa(udpPort))
 	if err != nil {
 		panic(err.Error())
@@ -55,7 +55,7 @@ func NewServer() *wkServer {
 	if err != nil {
 		panic(err.Error())
 	}
-	return &wkServer{
+	return &Worker{
 		Tool:        *NewTool(),
 		sussNum:     0,
 		revNum:      0,
