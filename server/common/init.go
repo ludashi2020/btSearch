@@ -76,7 +76,7 @@ func init() {
 }
 
 //NewSniffer :NewSniffer
-func NewSniffer() *sn {
+func NewSniffer() *Server {
 	dialInfo := &mgo.DialInfo{
 		Addrs:  []string{mongoAddr},
 		Direct: false,
@@ -110,7 +110,7 @@ func NewSniffer() *sn {
 	var segmenter gse.Segmenter
 	segmenter.LoadDict()
 
-	return &sn{
+	return &Server{
 		segmenter:     segmenter, //分词
 		printChan:     make(chan string, 5),
 		tdataChan:     make(chan header.Tdata, tdataChanSize),

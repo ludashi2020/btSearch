@@ -60,22 +60,21 @@ type bitTorrent struct {
 	FileType   string        `bson:"category"`
 	KeyWord    []string      `bson:"key_word"`
 }
-type sn struct {
+type Server struct {
 	segmenter     gse.Segmenter
 	hashList      mapset.Set
 	blackAddrList mapset.Set
 	Nodes         []string
 	Tool          Tool
-	// Conn          map[int]net.Conn
-	Mon         *mgo.Session
-	RedisClient *redis.Client
-	collection  *mgo.Collection
-	revNum      int
-	dropSpeed   int
-	sussNum     int
-	foundNum    int
-	blackList   []string
-	mongoLimit  chan bool
-	printChan   chan string
-	tdataChan   chan header.Tdata
+	Mon           *mgo.Session
+	RedisClient   *redis.Client
+	collection    *mgo.Collection
+	revNum        int
+	dropSpeed     int
+	sussNum       int
+	foundNum      int
+	blackList     []string
+	mongoLimit    chan bool
+	printChan     chan string
+	tdataChan     chan header.Tdata
 }

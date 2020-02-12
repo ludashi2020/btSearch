@@ -26,7 +26,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (self *sn) handleData() {
+func (self *Server) handleData() {
 	tdataChanCap := cap(self.tdataChan)
 	for {
 		s := <-self.Tool.ToolPostChan
@@ -77,7 +77,7 @@ func (self *sn) handleData() {
 
 	}
 }
-func (self *sn) NewServerConn() {
+func (self *Server) NewServerConn() {
 	for _, node := range wkNodes {
 		self.Tool.Links = append(self.Tool.Links, Link{Conn: nil, Addr: node, LinkPostChan: make(chan header.Tdata, 1000)})
 	}
@@ -87,7 +87,7 @@ func (self *sn) NewServerConn() {
 	self.Tool.LinksServe()
 
 }
-func (self *sn) Reboot() {
+func (self *Server) Reboot() {
 
 	for {
 		time.Sleep(time.Second * 240)
@@ -96,7 +96,7 @@ func (self *sn) Reboot() {
 	}
 
 }
-func (self *sn) PrintLog() {
+func (self *Server) PrintLog() {
 
 	for {
 		fmt.Printf("\r")
@@ -105,7 +105,7 @@ func (self *sn) PrintLog() {
 
 }
 
-func (self *sn) CheckSpeed() {
+func (self *Server) CheckSpeed() {
 	sussNum := 0
 	dropSpeed := 0
 	foundNum := 0
@@ -130,7 +130,7 @@ func (self *sn) CheckSpeed() {
 
 }
 
-func (self *sn) Metadata() {
+func (self *Server) Metadata() {
 	if metadataNum < 1 {
 		self.printChan <- ("metadataNum error set defalut 10")
 	}
@@ -194,7 +194,7 @@ func (self *sn) Metadata() {
 
 }
 
-func (self *sn) newTorrent(metadata []byte, InfoHash string) (torrent bitTorrent, err error) {
+func (self *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTorrent, err error) {
 	info, err := bencode.Decode(bytes.NewBuffer(metadata))
 	if err != nil {
 		return bitTorrent{}, err
@@ -292,7 +292,7 @@ findName:
 
 }
 
-func (self *sn) findHash(infohash string) (m map[string]interface{}, err error) {
+func (self *Server) findHash(infohash string) (m map[string]interface{}, err error) {
 	if redisEnable {
 		val, redisErr := self.RedisClient.Get(infohash).Result()
 		if redisErr == redis.Nil {
@@ -319,7 +319,7 @@ func (self *sn) findHash(infohash string) (m map[string]interface{}, err error) 
 	return
 }
 
-func (self *sn) syncmongodb(data bitTorrent) (err error) {
+func (self *Server) syncmongodb(data bitTorrent) (err error) {
 
 	c := self.Mon.DB(dataBase).C(collection)
 	err = c.Insert(data)
@@ -327,7 +327,7 @@ func (self *sn) syncmongodb(data bitTorrent) (err error) {
 	return
 }
 
-func (self *sn) updateTimeHot(objectID bson.ObjectId) (err error) {
+func (self *Server) updateTimeHot(objectID bson.ObjectId) (err error) {
 
 	c := self.Mon.DB(dataBase).C(collection)
 
