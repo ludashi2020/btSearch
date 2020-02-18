@@ -19,17 +19,24 @@ require (
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-ego/gse v0.0.0-20200122160942-1a7fb4a3d3e2
 	github.com/go-redis/redis v6.15.6+incompatible
+	github.com/gogf/greuse v1.1.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.3.3
+	github.com/gopherjs/vecty v0.0.0-20191227222824-6a0a25ee5a96 // indirect
 	github.com/gorilla/websocket v1.4.1
+	github.com/libp2p/go-reuseport v0.0.1
+	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/pkg/errors v0.8.1
 	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644 // indirect
+	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
+	github.com/slimsag/blackfriday v2.0.0+incompatible // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.4.0
 	gitlab.com/go-box/pongo2gin v0.0.0-20180611101114-fb2c4f0fe00f
 	go.opencensus.io v0.21.0
+	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	google.golang.org/grpc v1.27.0
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22

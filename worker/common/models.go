@@ -17,6 +17,11 @@ type node struct {
 }
 
 var bootstapNodes = []string{
+	"9.rarbg.to:2710",
+	"9.rarbg.me:2710",
+	"open.demonii.com:1337",
+	"tracker.opentrackr.org:1337",
+	"p4p.arenabg.com:1337",
 	"router.utorrent.com:6881",
 	"router.bittorrent.com:6881",
 	"dht.transmissionbt.com:6881",
@@ -41,7 +46,7 @@ const (
 
 type message struct {
 	buf  []byte
-	addr net.UDPAddr
+	addr net.Addr
 }
 type Worker struct {
 	Tool        Tool
@@ -50,7 +55,7 @@ type Worker struct {
 	sussNum     int
 	dropNum     int
 	findNodeNum int
-	udpListener *net.UDPConn
+	udpListener net.PacketConn
 	localID     string
 	// node        mapset.Set
 	nodeChan    chan *node

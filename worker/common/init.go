@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/Unknwon/goconfig"
+	reuse "github.com/libp2p/go-reuseport"
 )
 
 func checkErr(err error) {
@@ -46,12 +48,15 @@ func init() {
 }
 
 func NewServer() *Worker {
-	udpAddr, err := net.ResolveUDPAddr("udp4", ":"+strconv.Itoa(udpPort))
-	if err != nil {
-		panic(err.Error())
+	listenConfig := net.ListenConfig{
+		Control: reuse.Control,
 	}
-
-	udplistener, err := net.ListenUDP("udp4", udpAddr)
+	// udpAddr, err := net.ResolveUDPAddr("udp4", ":"+strconv.Itoa(udpPort))
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
+	udplistener, err := listenConfig.ListenPacket(context.Background(), "udp", ":"+strconv.Itoa(udpPort)) //端口复用
+	// udplistener, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
 		panic(err.Error())
 	}

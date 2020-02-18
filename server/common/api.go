@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"path"
 	"strconv"
@@ -17,6 +18,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/Bmixo/btSearch/header"
+	reuse "github.com/libp2p/go-reuseport"
 
 	"github.com/Bmixo/btSearch/package/bencode"
 	"github.com/Bmixo/btSearch/package/metawire"
@@ -134,6 +136,11 @@ func (self *Server) Metadata() {
 	if metadataNum < 1 {
 		self.printChan <- ("metadataNum error set defalut 10")
 	}
+	nla, err := net.ResolveTCPAddr("tcp4", ":9797")
+	if err != nil {
+		panic("resolving local addr")
+	}
+	dialer := net.Dialer{Control: reuse.Control, Timeout: time.Second * 1, LocalAddr: nla}
 	for i := 0; i < metadataNum; i++ {
 		go func() {
 			for {
@@ -146,6 +153,7 @@ func (self *Server) Metadata() {
 				peer := metawire.New(
 					string(infoHash),
 					tdata.Addr,
+					metawire.Dialer(dialer),
 					metawire.Timeout(time.Second*1),
 					metawire.Timeout(time.Second*3),
 				)

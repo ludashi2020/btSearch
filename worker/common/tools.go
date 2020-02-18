@@ -67,7 +67,6 @@ func (self *Tool) Connect(i int) {
 
 	}
 }
-
 func (self *Tool) LinksServe() {
 	for i := 0; i < len(self.Links); i++ {
 		go self.Connect(i)

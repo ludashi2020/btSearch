@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"crypto/rand"
+	"strings"
 
 	randx "math/rand"
 
@@ -27,7 +28,7 @@ func (self *Worker) HandleMsg() {
 		go func() {
 			for {
 				buf := make([]byte, 512)
-				n, addr, err := self.udpListener.ReadFromUDP(buf)
+				n, addr, err := self.udpListener.ReadFrom(buf)
 				if err != nil {
 					self.printChan <- (err.Error())
 					continue
@@ -35,7 +36,7 @@ func (self *Worker) HandleMsg() {
 				self.revNum = self.revNum + 1
 				self.messageChan <- &message{
 					buf:  buf[:n],
-					addr: *addr,
+					addr: addr,
 				}
 			}
 		}()
@@ -73,6 +74,14 @@ func (self *Worker) FindNode() {
 		if self.findNodeNum == 0 {
 			for _, address := range bootstapNodes {
 				self.printChan <- ("send to: " + address)
+				self.sendFindNode(&node{
+					addr: address,
+					id:   self.localID,
+				})
+			}
+		} else {
+			time.Sleep(15 * time.Second)
+			for _, address := range bootstapNodes {
 				self.sendFindNode(&node{
 					addr: address,
 					id:   self.localID,
@@ -122,7 +131,7 @@ func (self *Worker) timer() {
 
 }
 
-func (self *Worker) onReply(dict *map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onReply(dict *map[string]interface{}, from net.Addr) {
 	// tid, ok := (*dict)["t"].(string)
 	// if !ok {
 	// 	return
@@ -146,7 +155,7 @@ func (self *Worker) onReply(dict *map[string]interface{}, from *net.UDPAddr) {
 
 }
 
-func (self *Worker) onQuery(dict *map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onQuery(dict *map[string]interface{}, from net.Addr) {
 	q, ok := (*dict)["q"]
 	if !ok {
 		self.printChan <- ("dict q err,788990")
@@ -166,7 +175,7 @@ func (self *Worker) onQuery(dict *map[string]interface{}, from *net.UDPAddr) {
 	}
 }
 
-func (self *Worker) onFindNode(dict *map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onFindNode(dict *map[string]interface{}, from net.Addr) {
 	// c := 1
 	tid, ok := (*dict)["t"].(string)
 	if !ok {
@@ -196,16 +205,16 @@ func (self *Worker) onMessage() {
 		}
 		switch y {
 		case "q":
-			self.onQuery(&dict, &data.addr)
+			self.onQuery(&dict, data.addr)
 		case "r": //,
-			self.onReply(&dict, &data.addr)
+			self.onReply(&dict, data.addr)
 		//case "e": //处理错误不写 爬虫没必要浪费资源
 		default:
 			continue
 		}
 	}
 }
-func (self *Worker) onPing(dict *map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onPing(dict *map[string]interface{}, from net.Addr) {
 	tid, ok := (*dict)["t"].(string)
 	if !ok {
 		return
@@ -224,7 +233,7 @@ func makeReply(tid string, r map[string]interface{}) map[string]interface{} {
 	}
 	return dict
 }
-func genToken(from *net.UDPAddr) string {
+func genToken(from net.Addr) string {
 	return secret + from.String()[:8]
 	// sha1 := sha1.New()
 	// sha1.Write(from.IP)
@@ -232,7 +241,7 @@ func genToken(from *net.UDPAddr) string {
 	// return string(sha1.Sum(nil))
 }
 
-func (self *Worker) onGetPeers(dict map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onGetPeers(dict map[string]interface{}, from net.Addr) {
 
 	t := dict["t"].(string)
 	a, ok := dict["a"].(map[string]interface{})
@@ -253,7 +262,7 @@ func (self *Worker) onGetPeers(dict map[string]interface{}, from *net.UDPAddr) {
 
 }
 
-func (self *Worker) onAnnouncePeer(dict *map[string]interface{}, from *net.UDPAddr) {
+func (self *Worker) onAnnouncePeer(dict *map[string]interface{}, from net.Addr) {
 	tid, ok := (*dict)["t"].(string)
 	if !ok {
 		return
@@ -280,7 +289,10 @@ func (self *Worker) onAnnouncePeer(dict *map[string]interface{}, from *net.UDPAd
 		if !ok {
 			return
 		}
-		from.Port = int(fromPort)
+		from1, err := net.ResolveIPAddr("ip", from.String()[:strings.LastIndex(from.String(), ":")]+strconv.FormatInt(fromPort, 10))
+		if err == nil {
+			from = from1
+		}
 	}
 	d := makeReply(tid, map[string]interface{}{
 		"id": self.localID,
@@ -337,7 +349,7 @@ func (self *Worker) sendFindNode(one *node) {
 		"id":     neighborID(one.id, self.localID),
 		"target": string(randBytes(20)),
 	})
-	addr, err := net.ResolveUDPAddr("udp4", one.addr)
+	addr, err := net.ResolveUDPAddr("udp", one.addr)
 	if err != nil {
 		return
 	}
@@ -347,7 +359,7 @@ func (self *Worker) sendFindNode(one *node) {
 
 func nodeToString(nodes []*node) (result string) {
 	for _, j := range nodes {
-		addr, err := net.ResolveUDPAddr("udp4", j.addr)
+		addr, err := net.ResolveUDPAddr("udp", j.addr)
 		if err != nil {
 			continue
 		}

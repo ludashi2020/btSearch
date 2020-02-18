@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/Bmixo/btSearch/package/bencode"
+	reuse "github.com/libp2p/go-reuseport"
 )
 
 const (
@@ -39,6 +40,7 @@ func randomPeerID() string {
 }
 
 type Wire struct {
+	dialer         net.Dialer
 	infohash       string
 	from           string
 	peerID         string
@@ -64,9 +66,15 @@ func Timeout(t time.Duration) option {
 		w.timeout = t
 	}
 }
+func Dialer(dialer net.Dialer) option {
+	return func(w *Wire) {
+		w.dialer = dialer
+	}
+}
 
 func New(infohash string, from string, options ...option) *Wire {
 	w := &Wire{
+		dialer:         net.Dialer{Control: reuse.Control, Timeout: time.Second * 1},
 		infohash:       infohash,
 		from:           from,
 		peerID:         randomPeerID(),
@@ -92,7 +100,7 @@ func (w *Wire) connect(ctx context.Context) {
 		return
 	default:
 	}
-	conn, err := net.DialTimeout("tcp", w.from, w.tcpDialTimeout)
+	conn, err := w.dialer.Dial("tcp", w.from)
 	if err != nil {
 		w.err = fmt.Errorf("metawire: connect to remote peer failed: %v", err)
 		return
