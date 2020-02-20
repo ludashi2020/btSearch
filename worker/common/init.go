@@ -7,9 +7,11 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/Unknwon/goconfig"
 	reuse "github.com/libp2p/go-reuseport"
+	"golang.org/x/time/rate"
 )
 
 func checkErr(err error) {
@@ -34,6 +36,7 @@ func init() {
 	checkErr(err)
 	findNodeSpeed, err = strconv.Atoi(findNodeSpeedTmp)
 	checkErr(err)
+	findNodeSpeedLimiter = rate.NewLimiter(rate.Every(time.Second/time.Duration(findNodeSpeed)), findNodeSpeed)
 	nodeChanSizeTmp, err := cfg.GetValue("worker", "nodeChanSize")
 	checkErr(err)
 	nodeChanSize, err = strconv.Atoi(nodeChanSizeTmp)
@@ -61,12 +64,29 @@ func NewServer() *Worker {
 		panic(err.Error())
 	}
 	return &Worker{
-		Tool:        *NewTool(),
-		sussNum:     0,
-		revNum:      0,
-		dropNum:     0,
-		DecodeNum:   0,
-		findNodeNum: 0,
+		Tool: *NewTool(),
+		// sussNum:     0,
+		// revNum:      0,
+		// dropNum:     0,
+		// DecodeNum:   0,
+		// findNodeNum: 0,
+		count: []Count{
+			Count{
+				name: "sussNum", num: 0, numList: make([]int, 10), avageNum: 0,
+			},
+			Count{
+				name: "revNum", num: 0, numList: make([]int, 10), avageNum: 0,
+			},
+			Count{
+				name: "dropNum", num: 0, numList: make([]int, 10), avageNum: 0,
+			},
+			Count{
+				name: "DecodeNum", num: 0, numList: make([]int, 10), avageNum: 0,
+			},
+			Count{
+				name: "findNodeNum", num: 0, numList: make([]int, 10), avageNum: 0,
+			},
+		},
 		udpListener: udplistener,
 		localID:     string(randBytes(20)),
 		// node:        mapset.NewSet(),

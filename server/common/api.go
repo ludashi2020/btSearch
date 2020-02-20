@@ -62,7 +62,6 @@ func (self *Server) handleData() {
 				self.dropSpeed++
 				continue
 			}
-			self.foundNum++
 			err = self.updateTimeHot(m["_id"].(bson.ObjectId))
 			if err != nil {
 				self.printChan <- ("\n" + "update time hot ERR:0025" + err.Error() + "\n")
@@ -70,9 +69,11 @@ func (self *Server) handleData() {
 			}
 			continue
 		}
+
 		if len(self.tdataChan) < tdataChanCap {
 			self.tdataChan <- s
 			self.hashList.Add(InfoHash)
+			self.notFoundNum++
 		} else {
 			self.dropSpeed++
 		}
@@ -110,22 +111,22 @@ func (self *Server) PrintLog() {
 func (self *Server) CheckSpeed() {
 	sussNum := 0
 	dropSpeed := 0
-	foundNum := 0
+	notFoundNum := 0
 	revNum := 0
 	for {
 		self.sussNum -= sussNum
 		self.dropSpeed -= dropSpeed
-		self.foundNum -= foundNum
+		self.notFoundNum -= notFoundNum
 		self.revNum -= revNum
 		self.printChan <- ("RevSpeed: " + strconv.Itoa(self.revNum) + "/sec" +
 			" DropSpeed: " + strconv.Itoa(self.dropSpeed) + "/sec" +
-			" FoundSpeed: " + strconv.Itoa(self.foundNum) + "/sec" +
+			" NotFoundSpeed: " + strconv.Itoa(self.notFoundNum) + "/sec" +
 			" SussSpeed: " + strconv.Itoa(self.sussNum) + "/sec" +
 			" HashList:" + strconv.Itoa(self.hashList.Cardinality()) +
 			" blackAddrList:" + strconv.Itoa(self.blackAddrList.Cardinality()))
 		sussNum = self.sussNum
 		dropSpeed = self.dropSpeed
-		foundNum = self.foundNum
+		notFoundNum = self.notFoundNum
 		revNum = self.revNum
 		time.Sleep(time.Second)
 	}

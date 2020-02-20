@@ -22,6 +22,18 @@ type Tool struct {
 	Links        []Link
 	ToolPostChan chan header.Tdata
 }
+type Client struct {
+	uid     uint64
+	conn    *websocket.Conn
+	dataCh  chan []byte
+	onClose func()
+	closed  bool
+}
+
+type ClientCollection struct {
+	sync.Mutex
+	clients map[uint64]*Client
+}
 
 func NewTool() *Tool {
 	return &Tool{
@@ -72,19 +84,6 @@ func (self *Tool) LinksServe() {
 	for i := 0; i < len(self.Links); i++ {
 		go self.Connect(i)
 	}
-}
-
-type Client struct {
-	uid     uint64
-	conn    *websocket.Conn
-	dataCh  chan []byte
-	onClose func()
-	closed  bool
-}
-
-type ClientCollection struct {
-	sync.Mutex
-	clients map[uint64]*Client
 }
 
 func NewClientCollection() *ClientCollection {

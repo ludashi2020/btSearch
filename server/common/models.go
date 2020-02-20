@@ -72,7 +72,7 @@ type Server struct {
 	revNum        int
 	dropSpeed     int
 	sussNum       int
-	foundNum      int
+	notFoundNum   int
 	blackList     []string
 	mongoLimit    chan bool
 	printChan     chan string

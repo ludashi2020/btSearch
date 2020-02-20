@@ -33,7 +33,7 @@ func (self *Worker) HandleMsg() {
 					self.printChan <- (err.Error())
 					continue
 				}
-				self.revNum = self.revNum + 1
+				self.count[1].num++
 				self.messageChan <- &message{
 					buf:  buf[:n],
 					addr: addr,
@@ -71,7 +71,7 @@ func (self *Worker) AutoSendFindNode() {
 
 func (self *Worker) FindNode() {
 	for {
-		if self.findNodeNum == 0 {
+		if self.count[4].avageNum == 0 {
 			for _, address := range bootstapNodes {
 				self.printChan <- ("send to: " + address)
 				self.sendFindNode(&node{
@@ -104,28 +104,40 @@ func (self *Worker) Server() {
 
 }
 func (self *Worker) timer() {
-	findNodeNumOld := 0
-	sussNumOld := 0
-	dropNumOld := 0
-	revNumOld := 0
-	decodeNumOld := 0
-	for {
-		self.findNodeNum -= findNodeNumOld
-		self.DecodeNum -= decodeNumOld
-		self.sussNum -= sussNumOld
-		self.dropNum -= dropNumOld
-		self.revNum -= revNumOld
-		self.printChan <- ("Rev: " + strconv.Itoa(self.revNum) + "r/sec" +
-			" Decode: " + strconv.Itoa(self.DecodeNum) + "r/sec" +
-			" Suss: " + strconv.Itoa(self.sussNum) + "p/sec" + " FindNode: " +
-			strconv.Itoa(self.findNodeNum) + "p/sec" + " Drop: " +
-			strconv.Itoa(self.dropNum) + "r/sec")
-		findNodeNumOld = self.findNodeNum
-		sussNumOld = self.sussNum
-		dropNumOld = self.dropNum
-		revNumOld = self.revNum
-		decodeNumOld = self.DecodeNum
+	for i := 0; i < len(self.count); i++ {
+		go func(ii int) {
+			size := len(self.count[ii].numList)
+			sum := 0
+			z := 0
+			for {
+				for j := 0; j < size; j++ {
+					self.count[ii].numList[j] = self.count[ii].num
+					self.count[ii].num = 0
+					for z = 0; z < size; z++ {
+						if self.count[ii].numList[z] == 0 {
+							break
+						}
+						sum += self.count[ii].numList[z]
+					}
+					if z > 0 {
+						self.count[ii].avageNum = sum / z
 
+					} else {
+						self.count[ii].avageNum = 0
+					}
+					sum = 0
+					time.Sleep(time.Second)
+				}
+			}
+		}(i)
+	}
+
+	for {
+		self.printChan <- ("Rev: " + strconv.Itoa(self.count[1].avageNum) + "r/sec" +
+			" Decode: " + strconv.Itoa(self.count[3].avageNum) + "r/sec" +
+			" Suss: " + strconv.Itoa(self.count[0].avageNum) + "p/sec" + " FindNode: " +
+			strconv.Itoa(self.count[4].avageNum) + "p/sec" + " Drop: " +
+			strconv.Itoa(self.count[2].avageNum) + "r/sec")
 		time.Sleep(time.Second * 1)
 	}
 
@@ -144,13 +156,15 @@ func (self *Worker) onReply(dict *map[string]interface{}, from net.Addr) {
 	if !ok {
 		return
 	}
-	if len(self.nodeChan) < nodeChanSize && self.findNodeNum < findNodeSpeed {
+	if len(self.nodeChan) < nodeChanSize {
 		for _, node := range decodeNodes(nodes) {
-			self.nodeChan <- node
+			if findNodeSpeedLimiter.Allow() {
+				self.nodeChan <- node
+			}
 		}
 
 	} else {
-		self.dropNum = self.dropNum + 1
+		self.count[2].num++
 	}
 
 }
@@ -198,7 +212,7 @@ func (self *Worker) onMessage() {
 			// self.printChan <- ("ERR 121213:" + err.Error())
 			continue
 		}
-		self.DecodeNum++
+		self.count[3].num++
 		y, ok := dict["y"].(string)
 		if !ok {
 			continue
@@ -299,7 +313,7 @@ func (self *Worker) onAnnouncePeer(dict *map[string]interface{}, from net.Addr) 
 	})
 
 	self.udpListener.WriteTo(bencode.Encode(d), from)
-	self.sussNum = self.sussNum + 1
+	self.count[0].num++
 	if len(self.Tool.ToolPostChan) == cap(self.Tool.ToolPostChan) {
 		<-self.Tool.ToolPostChan
 	}
@@ -344,7 +358,7 @@ func makeQuery(tid string, q string, a map[string]interface{}) map[string]interf
 }
 
 func (self *Worker) sendFindNode(one *node) {
-	self.findNodeNum = self.findNodeNum + 1
+	self.count[4].num++
 	msg := makeQuery(secret+one.addr[:4], "find_node", map[string]interface{}{
 		"id":     neighborID(one.id, self.localID),
 		"target": string(randBytes(20)),

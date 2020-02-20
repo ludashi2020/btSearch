@@ -2,8 +2,10 @@ package common
 
 import (
 	"net"
+	"time"
 
 	"github.com/Unknwon/goconfig"
+	"golang.org/x/time/rate"
 )
 
 type tdata struct {
@@ -28,12 +30,13 @@ var bootstapNodes = []string{
 }
 
 var (
-	listenerAddr  = "0.0.0.0:9898"
-	findNodeSpeed = 10000
-	nodeChanSize  = 10000
-	udpPort       = 6999
-	verifyPassord = ""
-	cfg           *goconfig.ConfigFile
+	listenerAddr         = "0.0.0.0:9898"
+	findNodeSpeed        = 10000
+	nodeChanSize         = 10000
+	findNodeSpeedLimiter = rate.NewLimiter(rate.Every(time.Second/time.Duration(findNodeSpeed)), findNodeSpeed)
+	udpPort              = 6999
+	verifyPassord        = ""
+	cfg                  *goconfig.ConfigFile
 )
 
 const (
@@ -48,16 +51,17 @@ type message struct {
 	buf  []byte
 	addr net.Addr
 }
+type Count struct {
+	name     string
+	numList  []int
+	avageNum int
+	num      int
+}
 type Worker struct {
 	Tool        Tool
-	revNum      int
-	DecodeNum   int
-	sussNum     int
-	dropNum     int
-	findNodeNum int
+	count       []Count
 	udpListener net.PacketConn
 	localID     string
-	// node        mapset.Set
 	nodeChan    chan *node
 	kbucket     []*node
 	nodes       string
