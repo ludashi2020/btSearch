@@ -33,7 +33,7 @@ func (self *Worker) HandleMsg() {
 					self.printChan <- (err.Error())
 					continue
 				}
-				self.count[1].num++
+				self.count[1].rate.Incr(1)
 				self.messageChan <- &message{
 					buf:  buf[:n],
 					addr: addr,
@@ -71,7 +71,7 @@ func (self *Worker) AutoSendFindNode() {
 
 func (self *Worker) FindNode() {
 	for {
-		if self.count[4].avageNum == 0 {
+		if self.count[4].rate.Rate() == 0 {
 			for _, address := range bootstapNodes {
 				self.printChan <- ("send to: " + address)
 				self.sendFindNode(&node{
@@ -104,40 +104,12 @@ func (self *Worker) Server() {
 
 }
 func (self *Worker) timer() {
-	for i := 0; i < len(self.count); i++ {
-		go func(ii int) {
-			size := len(self.count[ii].numList)
-			sum := 0
-			z := 0
-			for {
-				for j := 0; j < size; j++ {
-					self.count[ii].numList[j] = self.count[ii].num
-					self.count[ii].num = 0
-					for z = 0; z < size; z++ {
-						if self.count[ii].numList[z] == 0 {
-							break
-						}
-						sum += self.count[ii].numList[z]
-					}
-					if z > 0 {
-						self.count[ii].avageNum = sum / z
-
-					} else {
-						self.count[ii].avageNum = 0
-					}
-					sum = 0
-					time.Sleep(time.Second)
-				}
-			}
-		}(i)
-	}
-
 	for {
-		self.printChan <- ("Rev: " + strconv.Itoa(self.count[1].avageNum) + "r/sec" +
-			" Decode: " + strconv.Itoa(self.count[3].avageNum) + "r/sec" +
-			" Suss: " + strconv.Itoa(self.count[0].avageNum) + "p/sec" + " FindNode: " +
-			strconv.Itoa(self.count[4].avageNum) + "p/sec" + " Drop: " +
-			strconv.Itoa(self.count[2].avageNum) + "r/sec")
+		self.printChan <- ("Rev: " + strconv.FormatInt(self.count[1].rate.Rate(), 10) + "r/sec" +
+			" Decode: " + strconv.FormatInt(self.count[3].rate.Rate(), 10) + "r/sec" +
+			" Suss: " + strconv.FormatInt(self.count[0].rate.Rate(), 10) + "p/sec" + " FindNode: " +
+			strconv.FormatInt(self.count[4].rate.Rate(), 10) + "p/sec" + " Drop: " +
+			strconv.FormatInt(self.count[2].rate.Rate(), 10) + "r/sec")
 		time.Sleep(time.Second * 1)
 	}
 
@@ -164,7 +136,7 @@ func (self *Worker) onReply(dict *map[string]interface{}, from net.Addr) {
 		}
 
 	} else {
-		self.count[2].num++
+		self.count[2].rate.Incr(1)
 	}
 
 }
@@ -212,7 +184,7 @@ func (self *Worker) onMessage() {
 			// self.printChan <- ("ERR 121213:" + err.Error())
 			continue
 		}
-		self.count[3].num++
+		self.count[3].rate.Incr(1)
 		y, ok := dict["y"].(string)
 		if !ok {
 			continue
@@ -257,7 +229,10 @@ func genToken(from net.Addr) string {
 
 func (self *Worker) onGetPeers(dict map[string]interface{}, from net.Addr) {
 
-	t := dict["t"].(string)
+	t, ok := dict["t"].(string)
+	if !ok {
+		return
+	}
 	a, ok := dict["a"].(map[string]interface{})
 	if !ok {
 		return
@@ -313,14 +288,15 @@ func (self *Worker) onAnnouncePeer(dict *map[string]interface{}, from net.Addr) 
 	})
 
 	self.udpListener.WriteTo(bencode.Encode(d), from)
-	self.count[0].num++
 	if len(self.Tool.ToolPostChan) == cap(self.Tool.ToolPostChan) {
 		<-self.Tool.ToolPostChan
+		self.count[2].rate.Incr(1)
 	}
 	self.Tool.ToolPostChan <- header.Tdata{
 		Hash: hex.EncodeToString([]byte(infohash)),
 		Addr: from.String(),
 	}
+	self.count[0].rate.Incr(1)
 
 }
 func generEmptyString(length int) (result string) {
@@ -358,7 +334,7 @@ func makeQuery(tid string, q string, a map[string]interface{}) map[string]interf
 }
 
 func (self *Worker) sendFindNode(one *node) {
-	self.count[4].num++
+	self.count[4].rate.Incr(1)
 	msg := makeQuery(secret+one.addr[:4], "find_node", map[string]interface{}{
 		"id":     neighborID(one.id, self.localID),
 		"target": string(randBytes(20)),

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Unknwon/goconfig"
+	"github.com/paulbellamy/ratecounter"
 	"golang.org/x/time/rate"
 )
 
@@ -52,10 +53,8 @@ type message struct {
 	addr net.Addr
 }
 type Count struct {
-	name     string
-	numList  []int
-	avageNum int
-	num      int
+	name string
+	rate *ratecounter.RateCounter
 }
 type Worker struct {
 	Tool        Tool

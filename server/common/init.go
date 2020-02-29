@@ -7,12 +7,14 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Bmixo/btSearch/header"
 	"github.com/Unknwon/goconfig"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/go-ego/gse"
 	"github.com/go-redis/redis"
+	"github.com/paulbellamy/ratecounter"
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -122,5 +124,9 @@ func NewSniffer() *Server {
 		RedisClient:   redisClient,
 		mongoLimit:    make(chan bool, mongoConnectLimitNum),
 		blackList:     loadBlackList(),
+		revNum:        ratecounter.NewRateCounter(1 * time.Second),
+		dropSpeed:     ratecounter.NewRateCounter(1 * time.Second),
+		sussNum:       ratecounter.NewRateCounter(1 * time.Second),
+		notFoundNum:   ratecounter.NewRateCounter(1 * time.Second),
 	}
 }

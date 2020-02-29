@@ -33,7 +33,7 @@ func (self *Server) handleData() {
 	for {
 		s := <-self.Tool.ToolPostChan
 
-		self.revNum++
+		self.revNum.Incr(1)
 		if self.blackAddrList.Contains(s.Addr) {
 			continue
 		}
@@ -46,7 +46,7 @@ func (self *Server) handleData() {
 		select {
 		case self.mongoLimit <- true:
 		default:
-			self.dropSpeed++
+			self.dropSpeed.Incr(1)
 			continue
 		}
 		m, err := self.findHash(InfoHash)
@@ -59,7 +59,7 @@ func (self *Server) handleData() {
 			select {
 			case self.mongoLimit <- true:
 			default:
-				self.dropSpeed++
+				self.dropSpeed.Incr(1)
 				continue
 			}
 			err = self.updateTimeHot(m["_id"].(bson.ObjectId))
@@ -73,9 +73,9 @@ func (self *Server) handleData() {
 		if len(self.tdataChan) < tdataChanCap {
 			self.tdataChan <- s
 			self.hashList.Add(InfoHash)
-			self.notFoundNum++
+			self.notFoundNum.Incr(1)
 		} else {
-			self.dropSpeed++
+			self.dropSpeed.Incr(1)
 		}
 
 	}
@@ -109,25 +109,14 @@ func (self *Server) PrintLog() {
 }
 
 func (self *Server) CheckSpeed() {
-	sussNum := 0
-	dropSpeed := 0
-	notFoundNum := 0
-	revNum := 0
 	for {
-		self.sussNum -= sussNum
-		self.dropSpeed -= dropSpeed
-		self.notFoundNum -= notFoundNum
-		self.revNum -= revNum
-		self.printChan <- ("RevSpeed: " + strconv.Itoa(self.revNum) + "/sec" +
-			" DropSpeed: " + strconv.Itoa(self.dropSpeed) + "/sec" +
-			" NotFoundSpeed: " + strconv.Itoa(self.notFoundNum) + "/sec" +
-			" SussSpeed: " + strconv.Itoa(self.sussNum) + "/sec" +
+
+		self.printChan <- ("RevSpeed: " + strconv.FormatInt(self.revNum.Rate(), 10) + "/sec" +
+			" DropSpeed: " + strconv.FormatInt(self.dropSpeed.Rate(), 10) + "/sec" +
+			" NotFoundSpeed: " + strconv.FormatInt(self.notFoundNum.Rate(), 10) + "/sec" +
+			" SussSpeed: " + strconv.FormatInt(self.sussNum.Rate(), 10) + "/sec" +
 			" HashList:" + strconv.Itoa(self.hashList.Cardinality()) +
 			" blackAddrList:" + strconv.Itoa(self.blackAddrList.Cardinality()))
-		sussNum = self.sussNum
-		dropSpeed = self.dropSpeed
-		notFoundNum = self.notFoundNum
-		revNum = self.revNum
 		time.Sleep(time.Second)
 	}
 
@@ -184,7 +173,7 @@ func (self *Server) Metadata() {
 				select {
 				case self.mongoLimit <- true:
 				default:
-					self.dropSpeed++
+					self.dropSpeed.Incr(1)
 					continue
 				}
 				err = self.syncmongodb(torrent)
@@ -193,7 +182,7 @@ func (self *Server) Metadata() {
 					continue
 				}
 
-				self.sussNum++
+				self.sussNum.Incr(1)
 				self.hashList.Remove(torrent.InfoHash)
 				//self.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
 				continue

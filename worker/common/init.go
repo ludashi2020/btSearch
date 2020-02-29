@@ -11,6 +11,7 @@ import (
 
 	"github.com/Unknwon/goconfig"
 	reuse "github.com/libp2p/go-reuseport"
+	"github.com/paulbellamy/ratecounter"
 	"golang.org/x/time/rate"
 )
 
@@ -65,26 +66,21 @@ func NewServer() *Worker {
 	}
 	return &Worker{
 		Tool: *NewTool(),
-		// sussNum:     0,
-		// revNum:      0,
-		// dropNum:     0,
-		// DecodeNum:   0,
-		// findNodeNum: 0,
 		count: []Count{
 			Count{
-				name: "sussNum", num: 0, numList: make([]int, 10), avageNum: 0,
+				name: "sussNum", rate: ratecounter.NewRateCounter(1 * time.Second),
 			},
 			Count{
-				name: "revNum", num: 0, numList: make([]int, 10), avageNum: 0,
+				name: "revNum", rate: ratecounter.NewRateCounter(1 * time.Second),
 			},
 			Count{
-				name: "dropNum", num: 0, numList: make([]int, 10), avageNum: 0,
+				name: "dropNum", rate: ratecounter.NewRateCounter(1 * time.Second),
 			},
 			Count{
-				name: "DecodeNum", num: 0, numList: make([]int, 10), avageNum: 0,
+				name: "DecodeNum", rate: ratecounter.NewRateCounter(1 * time.Second),
 			},
 			Count{
-				name: "findNodeNum", num: 0, numList: make([]int, 10), avageNum: 0,
+				name: "findNodeNum", rate: ratecounter.NewRateCounter(1 * time.Second),
 			},
 		},
 		udpListener: udplistener,

@@ -4,6 +4,7 @@ import (
 	"github.com/Bmixo/btSearch/header"
 	"github.com/Unknwon/goconfig"
 	"github.com/go-redis/redis"
+	"github.com/paulbellamy/ratecounter"
 
 	mapset "github.com/deckarep/golang-set"
 
@@ -69,10 +70,10 @@ type Server struct {
 	Mon           *mgo.Session
 	RedisClient   *redis.Client
 	collection    *mgo.Collection
-	revNum        int
-	dropSpeed     int
-	sussNum       int
-	notFoundNum   int
+	revNum        *ratecounter.RateCounter
+	dropSpeed     *ratecounter.RateCounter
+	sussNum       *ratecounter.RateCounter
+	notFoundNum   *ratecounter.RateCounter
 	blackList     []string
 	mongoLimit    chan bool
 	printChan     chan string
