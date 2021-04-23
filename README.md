@@ -16,7 +16,7 @@ Tool   | 工具
 
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/framework.png)
 ## 注意:
-1.项目reuseport系统特性来监听端口，请保持新的linux 内核版本（4.9以上）
+1.项目使用了reuseport系统特性来监听端口，请保持新的linux 内核版本（4.9以上）
 
 ## 4.安装
 1. 在安装环境前您需要配置golang环境  [Go](https://golang.org/) 下载地址
