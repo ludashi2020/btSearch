@@ -111,12 +111,12 @@ func (self *Server) PrintLog() {
 func (self *Server) CheckSpeed() {
 	for {
 
-		self.printChan <- ("RevSpeed: " + strconv.FormatInt(self.revNum.Rate(), 10) + "/sec" +
-			" DropSpeed: " + strconv.FormatInt(self.dropSpeed.Rate(), 10) + "/sec" +
-			" NotFoundSpeed: " + strconv.FormatInt(self.notFoundNum.Rate(), 10) + "/sec" +
-			" SussSpeed: " + strconv.FormatInt(self.sussNum.Rate(), 10) + "/sec" +
-			" HashList:" + strconv.Itoa(self.hashList.Cardinality()) +
-			" blackAddrList:" + strconv.Itoa(self.blackAddrList.Cardinality()))
+		self.printChan <- "RevSpeed: " + strconv.FormatInt(self.revNum.Rate(), 10) + "/sec" +
+					" DropSpeed: " + strconv.FormatInt(self.dropSpeed.Rate(), 10) + "/sec" +
+					" NotFoundSpeed: " + strconv.FormatInt(self.notFoundNum.Rate(), 10) + "/sec" +
+					" SussSpeed: " + strconv.FormatInt(self.sussNum.Rate(), 10) + "/sec" +
+					" HashList:" + strconv.Itoa(self.hashList.Cardinality()) +
+					" blackAddrList:" + strconv.Itoa(self.blackAddrList.Cardinality())
 		time.Sleep(time.Second)
 	}
 
@@ -124,7 +124,7 @@ func (self *Server) CheckSpeed() {
 
 func (self *Server) Metadata() {
 	if metadataNum < 1 {
-		self.printChan <- ("metadataNum error set defalut 10")
+		self.printChan <- "metadataNum error set defalut 10"
 	}
 	nla, err := net.ResolveTCPAddr("tcp4", ":9797")
 	if err != nil {
@@ -226,7 +226,7 @@ func (self *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTor
 
 	var sourceName string
 	if v, ok := info["files"]; ok {
-		var biggestfile file
+		var biggestFile file
 		files := v.([]interface{})
 		bt.Files = make([]file, len(files))
 		var TotalLength int64
@@ -239,9 +239,9 @@ func (self *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTor
 				return bitTorrent{}, errors.New("length, not int64")
 			}
 			TotalLength = TotalLength + f["length"].(int64)
-			if f["length"].(int64) > biggestfile.Length {
-				biggestfile.Length = f["length"].(int64)
-				biggestfile.Path = f["path"].([]interface{})
+			if f["length"].(int64) > biggestFile.Length {
+				biggestFile.Length = f["length"].(int64)
+				biggestFile.Path = f["path"].([]interface{})
 			}
 			bt.Files[i] = file{
 				Path:   f["path"].([]interface{}),
@@ -249,7 +249,7 @@ func (self *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTor
 			}
 		}
 		bt.Length = TotalLength
-		sourceName = biggestfile.Path[len(biggestfile.Path)-1].(string)
+		sourceName = biggestFile.Path[len(biggestFile.Path)-1].(string)
 
 	} else if _, ok := info["length"]; ok {
 		bt.Length = info["length"].(int64)
@@ -259,8 +259,8 @@ func (self *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTor
 
 findName:
 	for i, one := range cats {
-		tmpLegth := len(one)
-		for j := 0; j < tmpLegth; j++ {
+		tmpLength := len(one)
+		for j := 0; j < tmpLength; j++ {
 
 			if strings.HasSuffix(sourceName, one[j]) {
 
@@ -290,27 +290,27 @@ findName:
 
 }
 
-func (self *Server) findHash(infohash string) (m map[string]interface{}, err error) {
+func (self *Server) findHash(infoHash string) (m map[string]interface{}, err error) {
 	if redisEnable {
-		val, redisErr := self.RedisClient.Get(infohash).Result()
+		val, redisErr := self.RedisClient.Get(infoHash).Result()
 		if redisErr == redis.Nil {
 			c := self.Mon.DB(dataBase).C(collection)
-			selector := bson.M{"infohash": infohash}
+			selector := bson.M{"infohash": infoHash}
 			err = c.Find(selector).One(&m)
 			if m != nil {
-				self.RedisClient.Set(infohash, m["_id"].(bson.ObjectId), 0)
+				self.RedisClient.Set(infoHash, m["_id"].(bson.ObjectId), 0)
 			}
 			return
 		} else if redisErr != nil {
 			c := self.Mon.DB(dataBase).C(collection)
-			selector := bson.M{"infohash": infohash}
+			selector := bson.M{"infohash": infoHash}
 			err = c.Find(selector).One(&m)
 		} else {
 			m["_id"] = bson.ObjectId(val)
 		}
 	} else {
 		c := self.Mon.DB(dataBase).C(collection)
-		selector := bson.M{"infohash": infohash}
+		selector := bson.M{"infohash": infoHash}
 		err = c.Find(selector).One(&m)
 	}
 	<-self.mongoLimit
@@ -344,7 +344,7 @@ func loadBlackList() (blackList []string) {
 
 	if err != nil {
 		fi.Close()
-		log.Panicln("\nError: %s\n", err)
+		log.Panicf("\nError: %s\n\n", err)
 		return []string{}
 	}
 	defer fi.Close()
