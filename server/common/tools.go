@@ -42,28 +42,28 @@ func NewTool() *Tool {
 	}
 
 }
-func (self *Tool) Connect(i int) {
-	if self.Links[i].Conn == nil {
+func (m *Tool) Connect(i int) {
+	if m.Links[i].Conn == nil {
 	reconnect:
 		var err error
-		log.Printf("\non connect: [%v]\n", self.Links[i].Addr)
-		self.Links[i].Conn, err = grpc.Dial(self.Links[i].Addr, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(time.Second*3))
-		if err != nil || self.Links[i].Conn == nil {
-			log.Printf("\nconnect fail: [%v]\n", self.Links[i].Addr)
+		log.Printf("\non connect: [%v]\n", m.Links[i].Addr)
+		m.Links[i].Conn, err = grpc.Dial(m.Links[i].Addr, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(time.Second*3))
+		if err != nil || m.Links[i].Conn == nil {
+			log.Printf("\nconnect fail: [%v]\n", m.Links[i].Addr)
 			time.Sleep(time.Millisecond * 200)
 			goto reconnect
 		}
-		log.Printf("\nconnect success: [%v]\n", self.Links[i].Addr)
-		client := header.NewRPCClient(self.Links[i].Conn)
+		log.Printf("\nconnect success: [%v]\n", m.Links[i].Addr)
+		client := header.NewRPCClient(m.Links[i].Conn)
 		ctx := context.Background()
 		stream, err := client.Communite(ctx)
 		if err != nil {
-			self.Links[i].Conn = nil
-			//self.Links[i].Conn.Close()
+			m.Links[i].Conn = nil
+			//m.Links[i].Conn.Close()
 			goto reconnect
 		}
 		if err := stream.Send(&header.Verify{Password: verifyPassord}); err != nil {
-			self.Links[i].Conn = nil
+			m.Links[i].Conn = nil
 			goto reconnect
 		}
 		for {
@@ -71,8 +71,8 @@ func (self *Tool) Connect(i int) {
 			if err != nil {
 				goto reconnect
 			}
-			if len(self.ToolPostChan) != cap(self.ToolPostChan) {
-				self.ToolPostChan <- *data
+			if len(m.ToolPostChan) != cap(m.ToolPostChan) {
+				m.ToolPostChan <- *data
 			}
 
 		}
@@ -80,9 +80,9 @@ func (self *Tool) Connect(i int) {
 	}
 }
 
-func (self *Tool) LinksServe() {
-	for i := 0; i < len(self.Links); i++ {
-		go self.Connect(i)
+func (m *Tool) LinksServe() {
+	for i := 0; i < len(m.Links); i++ {
+		go m.Connect(i)
 	}
 }
 
@@ -94,21 +94,17 @@ func NewClientCollection() *ClientCollection {
 
 var wsCollection = NewClientCollection()
 
-func (self *Tool) SendData(postData header.Tdata) string {
-	if self == nil {
-		return ""
-	}
-
-	for i := 0; i < len(self.Links); i++ {
-		if self.Links[i].LinkPostChan == nil {
+func (m *Tool) SendData(postData header.Tdata) string {
+	for i := 0; i < len(m.Links); i++ {
+		if m.Links[i].LinkPostChan == nil {
 			continue
 		}
-		self.Links[i].LinkPostChan <- postData
+		m.Links[i].LinkPostChan <- postData
 	}
 	return ""
 }
 
-func (self *Tool) Communite(stream header.RPC_CommuniteServer) error {
+func (m *Tool) Communite(stream header.RPC_CommuniteServer) error {
 
 	ctx := stream.Context()
 
@@ -136,7 +132,7 @@ func (self *Tool) Communite(stream header.RPC_CommuniteServer) error {
 			return ctx.Err()
 		}
 		for {
-			data := <-self.ToolPostChan
+			data := <-m.ToolPostChan
 			err := stream.Send(&data)
 			if err != nil {
 				log.Println("\n" + ctx.Err().Error() + "\n")
@@ -146,7 +142,7 @@ func (self *Tool) Communite(stream header.RPC_CommuniteServer) error {
 		}
 	}
 }
-func (self *Tool) ToolServer(toolServer *Tool) {
+func (m *Tool) ToolServer(toolServer *Tool) {
 	server := grpc.NewServer()
 	header.RegisterRPCServer(server, toolServer)
 	address, err := net.Listen("tcp", listenerAddr)

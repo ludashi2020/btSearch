@@ -28,103 +28,103 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (self *Server) handleData() {
-	tdataChanCap := cap(self.tdataChan)
+func (m *Server) handleData() {
+	tdataChanCap := cap(m.tdataChan)
 	for {
-		s := <-self.Tool.ToolPostChan
+		s := <-m.Tool.ToolPostChan
 
-		self.revNum.Incr(1)
-		if self.blackAddrList.Contains(s.Addr) {
+		m.revNum.Incr(1)
+		if m.blackAddrList.Contains(s.Addr) {
 			continue
 		}
 
 		InfoHash := s.Hash
 
-		if self.hashList.Contains(InfoHash) {
+		if m.hashList.Contains(InfoHash) {
 			continue
 		}
 		select {
-		case self.mongoLimit <- true:
+		case m.mongoLimit <- true:
 		default:
-			self.dropSpeed.Incr(1)
+			m.dropSpeed.Incr(1)
 			continue
 		}
-		m, err := self.findHash(InfoHash)
+		data, err := m.findHash(InfoHash)
 		if err != nil && err != mgo.ErrNotFound {
-			self.printChan <- ("\n" + "ERR:4511" + err.Error() + "\n")
+			m.printChan <- "\n" + "ERR:4511" + err.Error() + "\n"
 			continue
 		}
 
-		if m != nil {
+		if data != nil {
 			select {
-			case self.mongoLimit <- true:
+			case m.mongoLimit <- true:
 			default:
-				self.dropSpeed.Incr(1)
+				m.dropSpeed.Incr(1)
 				continue
 			}
-			err = self.updateTimeHot(m["_id"].(bson.ObjectId))
+			err = m.updateTimeHot(data["_id"].(bson.ObjectId))
 			if err != nil {
-				self.printChan <- ("\n" + "update time hot ERR:0025" + err.Error() + "\n")
+				m.printChan <- "\n" + "update time hot ERR:0025" + err.Error() + "\n"
 				continue
 			}
 			continue
 		}
 
-		if len(self.tdataChan) < tdataChanCap {
-			self.tdataChan <- s
-			self.hashList.Add(InfoHash)
-			self.notFoundNum.Incr(1)
+		if len(m.tdataChan) < tdataChanCap {
+			m.tdataChan <- s
+			m.hashList.Add(InfoHash)
+			m.notFoundNum.Incr(1)
 		} else {
-			self.dropSpeed.Incr(1)
+			m.dropSpeed.Incr(1)
 		}
 
 	}
 }
-func (self *Server) NewServerConn() {
+func (m *Server) NewServerConn() {
 	for _, node := range wkNodes {
-		self.Tool.Links = append(self.Tool.Links, Link{Conn: nil, Addr: node, LinkPostChan: make(chan header.Tdata, 1000)})
+		m.Tool.Links = append(m.Tool.Links, Link{Conn: nil, Addr: node, LinkPostChan: make(chan header.Tdata, 1000)})
 	}
 	for i := 0; i < 10; i++ {
-		go self.handleData()
+		go m.handleData()
 	}
-	self.Tool.LinksServe()
+	m.Tool.LinksServe()
 
 }
-func (self *Server) Reboot() {
+func (m *Server) Reboot() {
 
 	for {
 		time.Sleep(time.Second * 240)
-		self.blackAddrList.Clear()
-		self.hashList.Clear()
+		m.blackAddrList.Clear()
+		m.hashList.Clear()
 	}
 
 }
-func (self *Server) PrintLog() {
+func (m *Server) PrintLog() {
 
 	for {
 		fmt.Printf("\r")
-		fmt.Printf("%s", <-self.printChan)
+		fmt.Printf("%s", <-m.printChan)
 	}
 
 }
 
-func (self *Server) CheckSpeed() {
+func (m *Server) CheckSpeed() {
 	for {
 
-		self.printChan <- "RevSpeed: " + strconv.FormatInt(self.revNum.Rate(), 10) + "/sec" +
-					" DropSpeed: " + strconv.FormatInt(self.dropSpeed.Rate(), 10) + "/sec" +
-					" NotFoundSpeed: " + strconv.FormatInt(self.notFoundNum.Rate(), 10) + "/sec" +
-					" SussSpeed: " + strconv.FormatInt(self.sussNum.Rate(), 10) + "/sec" +
-					" HashList:" + strconv.Itoa(self.hashList.Cardinality()) +
-					" blackAddrList:" + strconv.Itoa(self.blackAddrList.Cardinality())
+		m.printChan <- "RevSpeed: " + strconv.FormatInt(m.revNum.Rate(), 10) + "/sec" +
+					" DropSpeed: " + strconv.FormatInt(m.dropSpeed.Rate(), 10) + "/sec" +
+					" NotFoundSpeed: " + strconv.FormatInt(m.notFoundNum.Rate(), 10) + "/sec" +
+					" SussSpeed: " + strconv.FormatInt(m.sussNum.Rate(), 10) + "/sec" +
+					" HashList:" + strconv.Itoa(m.hashList.Cardinality()) +
+					" blackAddrList:" + strconv.Itoa(m.blackAddrList.Cardinality())
 		time.Sleep(time.Second)
 	}
 
 }
 
-func (self *Server) Metadata() {
+func (m *Server) Metadata() {
 	if metadataNum < 1 {
-		self.printChan <- "metadataNum error set defalut 10"
+		m.printChan <- "metadataNum error set defalut 10"
 	}
 	nla, err := net.ResolveTCPAddr("tcp4", ":9797")
 	if err != nil {
@@ -134,7 +134,7 @@ func (self *Server) Metadata() {
 	for i := 0; i < metadataNum; i++ {
 		go func() {
 			for {
-				tdata := <-self.tdataChan
+				tdata := <-m.tdataChan
 				infoHash, err := hex.DecodeString(tdata.Hash)
 				if err != nil {
 					continue
@@ -149,16 +149,16 @@ func (self *Server) Metadata() {
 				)
 				data, err := peer.Fetch()
 				if err != nil {
-					self.blackAddrList.Add(tdata.Addr)
+					m.blackAddrList.Add(tdata.Addr)
 					continue
 				}
 
-				torrent, err := self.newTorrent(data, tdata.Hash)
+				torrent, err := m.newTorrent(data, tdata.Hash)
 				if err != nil {
 					continue
 				}
 
-				segments := self.segmenter.Segment([]byte(torrent.Name))
+				segments := m.segmenter.Segment([]byte(torrent.Name))
 				for _, j := range gse.ToSlice(segments, false) {
 					if utf8.RuneCountInString(j) < 2 || utf8.RuneCountInString(j) > 15 {
 						continue
@@ -171,20 +171,20 @@ func (self *Server) Metadata() {
 					}
 				}
 				select {
-				case self.mongoLimit <- true:
+				case m.mongoLimit <- true:
 				default:
-					self.dropSpeed.Incr(1)
+					m.dropSpeed.Incr(1)
 					continue
 				}
-				err = self.syncmongodb(torrent)
+				err = m.syncmongodb(torrent)
 
 				if err != nil {
 					continue
 				}
 
-				self.sussNum.Incr(1)
-				self.hashList.Remove(torrent.InfoHash)
-				//self.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
+				m.sussNum.Incr(1)
+				m.hashList.Remove(torrent.InfoHash)
+				//m.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
 				continue
 			}
 		}()
@@ -192,7 +192,7 @@ func (self *Server) Metadata() {
 
 }
 
-func (self *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTorrent, err error) {
+func (m *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTorrent, err error) {
 	info, err := bencode.Decode(bytes.NewBuffer(metadata))
 	if err != nil {
 		return bitTorrent{}, err
@@ -209,7 +209,7 @@ func (self *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTor
 		return bitTorrent{}, errors.New("interface conversion: interface {} is int64, not string,90099")
 	}
 
-	for _, black := range self.blackList {
+	for _, black := range m.blackList {
 		if strings.Contains(info["name"].(string), black) {
 
 			return bitTorrent{}, errors.New("Metadata Name is in Blacklist")
@@ -290,52 +290,52 @@ findName:
 
 }
 
-func (self *Server) findHash(infoHash string) (m map[string]interface{}, err error) {
+func (m *Server) findHash(infoHash string) (result map[string]interface{}, err error) {
 	if redisEnable {
-		val, redisErr := self.RedisClient.Get(infoHash).Result()
+		val, redisErr := m.RedisClient.Get(infoHash).Result()
 		if redisErr == redis.Nil {
-			c := self.Mon.DB(dataBase).C(collection)
+			c := m.Mon.DB(dataBase).C(collection)
 			selector := bson.M{"infohash": infoHash}
-			err = c.Find(selector).One(&m)
-			if m != nil {
-				self.RedisClient.Set(infoHash, m["_id"].(bson.ObjectId), 0)
+			err = c.Find(selector).One(&result)
+			if result != nil {
+				m.RedisClient.Set(infoHash, result["_id"].(bson.ObjectId), 0)
 			}
 			return
 		} else if redisErr != nil {
-			c := self.Mon.DB(dataBase).C(collection)
+			c := m.Mon.DB(dataBase).C(collection)
 			selector := bson.M{"infohash": infoHash}
-			err = c.Find(selector).One(&m)
+			err = c.Find(selector).One(&result)
 		} else {
-			m["_id"] = bson.ObjectId(val)
+			result["_id"] = bson.ObjectId(val)
 		}
 	} else {
-		c := self.Mon.DB(dataBase).C(collection)
+		c := m.Mon.DB(dataBase).C(collection)
 		selector := bson.M{"infohash": infoHash}
-		err = c.Find(selector).One(&m)
+		err = c.Find(selector).One(&result)
 	}
-	<-self.mongoLimit
+	<-m.mongoLimit
 	return
 }
 
-func (self *Server) syncmongodb(data bitTorrent) (err error) {
+func (m *Server) syncmongodb(data bitTorrent) (err error) {
 
-	c := self.Mon.DB(dataBase).C(collection)
+	c := m.Mon.DB(dataBase).C(collection)
 	err = c.Insert(data)
-	<-self.mongoLimit
+	<-m.mongoLimit
 	return
 }
 
-func (self *Server) updateTimeHot(objectID bson.ObjectId) (err error) {
+func (m *Server) updateTimeHot(objectID bson.ObjectId) (err error) {
 
-	c := self.Mon.DB(dataBase).C(collection)
+	c := m.Mon.DB(dataBase).C(collection)
 
-	m := make(map[string]interface{})
-	m["$inc"] = map[string]int{"hot": 1}
-	m["$set"] = map[string]int64{"last_time": time.Now().Unix()}
+	data := make(map[string]interface{})
+	data["$inc"] = map[string]int{"hot": 1}
+	data["$set"] = map[string]int64{"last_time": time.Now().Unix()}
 
 	selector := bson.M{"_id": objectID}
-	err = c.Update(selector, m)
-	<-self.mongoLimit
+	err = c.Update(selector, data)
+	<-m.mongoLimit
 	return
 }
 
