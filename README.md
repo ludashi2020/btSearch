@@ -1,7 +1,6 @@
 # btSearch  一个用go语言实现的磁力搜索网站  
 
 ## 1.页面展示
-[演示站点](https://bt.bmixo.com/)
 
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index_old.png)
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index.PNG)
@@ -143,6 +142,10 @@ go run github.com/Bmixo/btSearch/worker
 ## 5.TODO
 - [ ] redis缓存
 - [ ] d2-admin后台数据展示
+- [ ] 打包docker镜像
+- [ ] 提供k8s高可用部署方案（mongodb sharding + 无状态均衡负载master  + etcd）
+- [ ] gin迁移iris
+
 
 
 
