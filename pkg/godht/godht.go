@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/Bmixo/btSearch/package/bencode"
+	"github.com/Bmixo/btSearch/pkg/bencode"
 )
 
 var BootstrapNodes = []string{
