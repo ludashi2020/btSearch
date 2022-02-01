@@ -97,20 +97,17 @@ curl --user elastic:changeme -XPOST 'localhost:9200/bavbt/_open'
 
 ## 4.运行
 
-首先需要配置您的conf文件
+首先需要配置相关环境变量
 ```
-[mongodb]
-musername=
-mpassword=
-database=bavbt
-collection=torrent
-addr=127.0.0.1:27017
-[elasticsearch]
-url=http://127.0.0.1:9200/bavbt/torrent/
-eusername=elastic
-epassword=changeme
-[webServer]
-webServerAddr=127.0.0.1:7878
+    mongoAddr=127.0.0.1:27017
+    mongoDatabase=bavbt
+    mongoCollection=torrent
+    mongoUsername=root
+    mongoPassWord=root
+    esUsername=elastic
+    esPassWord=changeme
+    esURL=http://127.0.0.1:9200/bavbt/torrent/
+    webServerAddr=127.0.0.1:7878
 ```
 
 

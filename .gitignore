@@ -1,3 +1,5 @@
 server/config/server.conf
 worker/config/worker.conf
 /.idea
+/docker/misc/
+*.bat

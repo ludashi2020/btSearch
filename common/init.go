@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Unknwon/goconfig"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/gin-gonic/gin"
 	mgo "gopkg.in/mgo.v2"
@@ -19,34 +18,16 @@ func checkErr(err error) {
 	}
 }
 func init() {
-	confPath := flag.String("c", "config/server.conf", "web server config file")
-
 	flag.Parse()
-
-	config, err := goconfig.LoadConfigFile(*confPath)
-	if err != nil {
-		fmt.Println("Config file not exist")
-		os.Exit(-1)
-	}
-	cfg = config
-	mongoAddr, err = cfg.GetValue("mongodb", "addr")
-	checkErr(err)
-	dataBase, err = cfg.GetValue("mongodb", "database")
-	checkErr(err)
-	collection, err = cfg.GetValue("mongodb", "collection")
-	checkErr(err)
-	mongoUsername, err = cfg.GetValue("mongodb", "musername")
-	checkErr(err)
-	mongoPassWord, err = cfg.GetValue("mongodb", "mpassword")
-	checkErr(err)
-	esUsername, err = cfg.GetValue("elasticsearch", "eusername")
-	checkErr(err)
-	esPassWord, err = cfg.GetValue("elasticsearch", "epassword")
-	checkErr(err)
-	esURL, err = cfg.GetValue("elasticsearch", "url")
-	checkErr(err)
-	WebServerAddr, err = cfg.GetValue("webServer", "webServerAddr")
-	checkErr(err)
+	mongoAddr = os.Getenv("mongoAddr")
+	dataBase = os.Getenv("mongoDatabase")
+	collection = os.Getenv("mongoCollection")
+	mongoUsername = os.Getenv("mongoUsername")
+	mongoPassWord = os.Getenv("mongoPassWord")
+	esUsername = os.Getenv("esUsername")
+	esPassWord = os.Getenv("esPassWord")
+	esURL = os.Getenv("esURL")
+	WebServerAddr = os.Getenv("webServerAddr")
 }
 func NewServer() *webServer {
 	dialInfo := &mgo.DialInfo{
