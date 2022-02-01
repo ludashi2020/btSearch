@@ -17,7 +17,7 @@ Tool   | 工具
 ## 注意:
 1.项目使用了reuseport系统特性来监听端口，请保持新的linux 内核版本（4.9以上）
 
-## 4.安装
+## 3.安装
 1. 在安装环境前您需要配置golang环境  [Go](https://golang.org/) 下载地址
 2. 安装python和mongodb
 ```
@@ -93,15 +93,6 @@ curl --user elastic:changeme -XPUT localhost:9200/bavbt/_settings?pretty -d '{
 curl --user elastic:changeme -XPOST 'localhost:9200/bavbt/_open'
 ```
 
-6. Mongodb配置副本集
-```
-service mongod stop
-vim /etc/mongodb.conf
-添加replSet=rs1
-service mongod start
-```
-可以通过mongoshelly运行rs.initiate()查看副本集配置是否正确
-
 
 
 ## 4.运行
@@ -122,12 +113,6 @@ epassword=changeme
 webServerAddr=127.0.0.1:7878
 ```
 
-开启数据库同步Elasticsearch服务
-
-```
-mongo-connector -m mongodb://localhost:27017/?unicode_decode_error_handler=ignore -t http://elastic:changeme@localhost:9200/torrent -d elastic2_doc_manager -n bavbt.torrent -i name,length,hot,create_time,category,infohash
-```
-
 
 服务端运行
 ```
@@ -140,8 +125,7 @@ go run github.com/Bmixo/btSearch/worker
 
 
 ## 5.TODO
-- [ ] redis缓存
-- [ ] d2-admin后台数据展示
+- [ ] 后台数据展示
 - [ ] 打包docker镜像
 - [ ] 提供k8s高可用部署方案（mongodb sharding + 无状态均衡负载master  + etcd）
 - [ ] gin迁移iris
