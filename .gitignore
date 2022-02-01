@@ -3,3 +3,4 @@ worker/config/worker.conf
 /.idea
 /docker/misc/
 *.bat
+/docker/torrent-web
