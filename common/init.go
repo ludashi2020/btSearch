@@ -1,7 +1,6 @@
 package common
 
 import (
-	"flag"
 	"fmt"
 	"github.com/Bmixo/btSearch/pkg/pongo2gin"
 	"os"
@@ -18,7 +17,6 @@ func checkErr(err error) {
 	}
 }
 func init() {
-	flag.Parse()
 	mongoAddr = os.Getenv("mongoAddr")
 	dataBase = os.Getenv("mongoDatabase")
 	collection = os.Getenv("mongoCollection")
@@ -36,16 +34,15 @@ func NewServer() *webServer {
 		Database: dataBase,
 		Source:   collection,
 		Username: mongoUsername,
-		Password: mongoUsername,
+		Password: mongoPassWord,
 	}
 
 	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		panic(err)
+	}
 	session.SetPoolLimit(10)
 	session.SetMode(mgo.Monotonic, true)
-
-	if err != nil {
-		panic(err.Error)
-	}
 	fmt.Println("Mongodb load suss")
 
 	gin.SetMode(gin.ReleaseMode)

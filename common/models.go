@@ -59,6 +59,7 @@ var (
 	hotSearchOnePageSize = 6
 	hotSearchPageSize    = 3
 	dataBase             = ""
+	authDataBase         = ""
 	collection           = ""
 	esURL                = ""
 	WebServerAddr        = ""
