@@ -5,18 +5,22 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
-
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
+
+func init() {
+	go http.ListenAndServe("0.0.0.0:6060", nil)
+}
 
 var perDataSize = 50
 var maxThreadNum = 5
@@ -176,7 +180,7 @@ func (m *monServer) sync() {
 	}
 
 	for i := range m.Data {
-		go m.parserData(i, maxThread)
+		m.parserData(i, maxThread)
 		m.printChan <- "-----------------------------------------------"
 	}
 }
@@ -223,9 +227,7 @@ func (m *monServer) parserData(data []map[string]interface{}, maxThread chan int
 		}
 		pid := <-maxThread
 		m.printChan <- "PID:" + strconv.Itoa(pid) + "----" + "---" + one["name"].(string) + "------" + one["_id"].(bson.ObjectId).Hex()
-
-		go m.Put(esURL+objectId, syncdata, pid, maxThread)
-
+		m.Put(esURL+objectId, syncdata, pid, maxThread)
 	}
 }
 
