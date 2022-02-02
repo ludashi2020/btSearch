@@ -3,6 +3,8 @@ package common
 import (
 	"fmt"
 	"github.com/Bmixo/btSearch/pkg/pongo2gin"
+	elasticsearch "github.com/elastic/go-elasticsearch/v6"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -16,6 +18,15 @@ func checkErr(err error) {
 		panic(err.Error())
 	}
 }
+
+var ES *elasticsearch.Client
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
+}
+
 func init() {
 	mongoAddr = os.Getenv("mongoAddr")
 	dataBase = os.Getenv("mongoDatabase")
@@ -26,7 +37,26 @@ func init() {
 	esPassWord = os.Getenv("esPassWord")
 	esURL = os.Getenv("esURL")
 	WebServerAddr = os.Getenv("webServerAddr")
+	esUrlBase := os.Getenv("esUrlBase")
+	{
+		var err error
+		ES, err = elasticsearch.NewClient(elasticsearch.Config{
+			Addresses: []string{esUrlBase},
+			Username:  esUsername,
+			Password:  esPassWord,
+		})
+		if err != nil {
+			log.Fatalf("Error creating the client: %s", err)
+		}
+		res, err := ES.Info()
+		if err != nil {
+			log.Fatalf("Error getting response: %s", err)
+		}
+		defer res.Body.Close()
+		log.Println(res)
+	}
 }
+
 func NewServer() *webServer {
 	dialInfo := &mgo.DialInfo{
 		Addrs:    []string{mongoAddr},

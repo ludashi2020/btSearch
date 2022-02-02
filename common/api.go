@@ -2,23 +2,23 @@ package common
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/PuerkitoBio/goquery"
 	"github.com/buger/jsonparser"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/flosch/pongo2"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
+	"io/ioutil"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func (server *webServer) Timer() {
@@ -150,11 +150,22 @@ func (server *webServer) Search(c *gin.Context) {
 	})
 }
 func searchES(kw, category, start string) (torrentList []torrent, begin int, end int, total int, took float64, err error) {
+	{
+		begin, err = strconv.Atoi(start)
+		if err != nil || begin <= 0 {
+			return nil, begin, end, total, took, errors.New("start err 9990990")
+		}
+	}
+	var resBytes []byte
+	{
 
-	mod := `[
-		{"term": {"category": "` + category + `"}},
+		var buf bytes.Buffer
+
+		if true {
+			mod := `[
+		{"term": {"file_type": "` + category + `"}},
 				  {"match": {
-		  "name" : {
+		  "title" : {
 			"query":"` + kw + `",
 			"operator":"and",
 			"minimum_should_match": "50%"
@@ -162,31 +173,26 @@ func searchES(kw, category, start string) (torrentList []torrent, begin int, end
 		  }
 		}
 	  ]`
-	switch category {
-	case "video":
-	case "document":
-	case "music":
-	case "all":
-		mod = `{
+			switch category {
+			case "video":
+			case "document":
+			case "music":
+			case "all":
+				mod = `{
 			"match": {
-				"name": {
+				"title": {
 					"query": "` + kw + `",
 					"operator": "and",
 					"minimum_should_match": "50%"
 				}
 			}
 		}`
-	default:
-		return nil, begin, end, total, took, errors.New("category err 980909")
+			default:
+				return nil, begin, end, total, took, errors.New("category err 980909")
 
-	}
-	begin, error := strconv.Atoi(start)
+			}
 
-	if error != nil || begin <= 0 {
-		return nil, begin, end, total, took, errors.New("start err 9990990")
-	}
-
-	sample := []byte(`{
+			sample := []byte(`{
 		"query": {
 			"bool": {
 				"must": {} 
@@ -200,19 +206,60 @@ func searchES(kw, category, start string) (torrentList []torrent, begin int, end
 			"create_time":{"order":"desc"}
 			}
 	}`)
-	//"hot":{"order":"desc"},
+			//"hot":{"order":"desc"},
 
-	dataTmp, _ := jsonparser.Set(sample, []byte(mod), "query", "bool", "must")
-	dataTmp, _ = jsonparser.Set(dataTmp, []byte(strconv.Itoa((begin-1)*15)), "from")
+			dataTmp, _ := jsonparser.Set(sample, []byte(mod), "query", "bool", "must")
+			dataTmp, _ = jsonparser.Set(dataTmp, []byte(strconv.Itoa((begin-1)*15)), "from")
 
-	result, err := get(esURL+"_search", dataTmp)
+			//result, err := get(esURL+"_search", dataTmp)
+			//
+			//if err != nil {
+			//	return nil, begin, end, total, took, errors.New("ES search err 78798")
+			//}
 
-	if err != nil {
-		return nil, begin, end, total, took, errors.New("ES search err 78798")
+			buf.Write(dataTmp)
+		}
+		//TODO 使用go-es封装查询
+		if false {
+			query := map[string]interface{}{
+				"query": map[string]interface{}{
+					"match": map[string]interface{}{
+						"title": kw,
+					},
+				},
+				//"highlight": map[string]interface{}{
+				//	"pre_tags" : []string{"<font color='red'>"},
+				//	"post_tags" : []string{"</font>"},
+				//	"fields" : map[string]interface{}{
+				//		"title" : map[string]interface{}{},
+				//	},
+				//},
+			}
+			if err := json.NewEncoder(&buf).Encode(query); err != nil {
+				return nil, begin, end, total, took, err
+			}
+		}
+		// Perform the search request.
+		res, err := ES.Search(
+			ES.Search.WithContext(context.Background()),
+			ES.Search.WithIndex("bavbt/torrent"),
+			ES.Search.WithBody(&buf),
+			ES.Search.WithPretty(),
+		)
+		if err != nil {
+			return nil, begin, end, total, took, err
+		}
+		defer res.Body.Close()
+		resBytes, err = ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, begin, end, total, took, err
+		}
+		fmt.Println(string(resBytes))
 	}
 
 	searchData := map[string]interface{}{}
-	err = json.Unmarshal(result, &searchData)
+
+	err = json.Unmarshal(resBytes, &searchData)
 	if err != nil {
 		return
 	}
@@ -254,22 +301,22 @@ func searchES(kw, category, start string) (torrentList []torrent, begin int, end
 
 	for _, data := range searchData["hits"].(map[string]interface{})["hits"].([]interface{}) {
 		one := data.(map[string]interface{})["_source"].(map[string]interface{})
-		name := one["name"].(string)
+		name := one["title"].(string)
 		if torrentSet.Contains(name) {
 			continue
 		}
 		createTime := time.Unix(int64(one["create_time"].(float64)), 0).Format("2006-01-02")
 		length, lengthType := getsize(int64(one["length"].(float64)))
-		hashlink := one["infohash"].(string) + "&dn=" + name
+		hashLink := one["hash_id"].(string) + "&dn=" + name
 		a := torrent{
 			Name:        name,
-			thunderLink: magnet2Thunder("magnet:?xt=urn:btih:" + hashlink),
-			InfoHash:    hashlink,
+			thunderLink: magnet2Thunder("magnet:?xt=urn:btih:" + hashLink),
+			InfoHash:    hashLink,
 			ObjectID:    data.(map[string]interface{})["_id"].(string),
 			CreateTime:  createTime,
 			Length:      length,
 			LengthType:  lengthType,
-			Category:    one["category"].(string),
+			Category:    one["file_type"].(string),
 		}
 		torrentList = append(torrentList, a)
 		torrentSet.Add(a.Name)
@@ -329,7 +376,7 @@ func (server *webServer) Details(c *gin.Context) {
 				tmKeyword = append(tmKeyword, keyword.(string))
 			}
 
-			files := []file{}
+			var files []file
 			var filenum int
 
 			for _, one := range torrentData["files"].([]interface{}) {
@@ -422,7 +469,7 @@ func get(url string, indata []byte) (data []byte, err error) {
 	post := bytes.NewBuffer(indata)
 	req, err := http.NewRequest("GET", url, post)
 	if err != nil {
-		return []byte{}, errors.New("Get Error")
+		return []byte{}, err
 	}
 
 	req.SetBasicAuth(esUsername, esPassWord)
@@ -431,7 +478,7 @@ func get(url string, indata []byte) (data []byte, err error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return []byte{}, errors.New("Get Error")
+		return []byte{}, err
 	}
 	defer resp.Body.Close()
 

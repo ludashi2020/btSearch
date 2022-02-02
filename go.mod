@@ -7,6 +7,7 @@ require (
 	github.com/Unknwon/goconfig v1.0.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/deckarep/golang-set v1.8.0
+	github.com/elastic/go-elasticsearch/v6 v6.8.10
 	github.com/flosch/pongo2 v0.0.0-20200913210552-0d938eb266f3
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-ego/gse v0.0.0-20200122160942-1a7fb4a3d3e2

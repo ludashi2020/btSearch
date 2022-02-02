@@ -4,3 +4,4 @@ worker/config/worker.conf
 /docker/misc/
 *.bat
 /docker/torrent-web
+/cmd/mongo2es/mongo2es

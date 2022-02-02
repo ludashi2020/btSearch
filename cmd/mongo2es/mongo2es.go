@@ -9,25 +9,25 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 var perDataSize = 50
-var maxThreadNum = 100
+var maxThreadNum = 5
 
 var (
-	esURL           = os.Getenv("esURL")           //"http://127.0.0.1:9200/bavbt/torrent/"
-	mongoAddr       = os.Getenv("mongoAddr")       //"127.0.0.1:27017"
-	mongoDataBase   = os.Getenv("mongoDataBase")   //"bavbt"
-	mongoCollection = os.Getenv("mongoCollection") //"torrent"
-	mongoUsername   = os.Getenv("mongoUsername")
-	mongoPassword   = os.Getenv("mongoPassword")
+	esURL           = ""
+	mongoAddr       = ""
+	mongoDataBase   = ""
+	mongoCollection = ""
+	mongoUsername   = ""
+	mongoPassword   = ""
 )
 
 type monServer struct {
@@ -40,12 +40,12 @@ type monServer struct {
 }
 
 type esData struct {
-	Title      string
-	ObjectID   string
-	Length     int64
-	CreateTime int64
-	FileType   string
-	Hot        int
+	Title      string `json:"title"`
+	HashId     string `json:"hash_id"`
+	Length     int64  `json:"length"`
+	CreateTime int64  `json:"create_time"`
+	FileType   string `json:"file_type"`
+	Hot        int    `json:"hot"`
 }
 
 func newMon() *monServer {
@@ -95,7 +95,7 @@ func newMon() *monServer {
 func (m *monServer) getdata(objectid bson.ObjectId) {
 
 	//data := bson.M{"hot": 100}
-	c := m.Session.DB("bavbt").C("torrent")
+	c := m.Session.DB(mongoCollection).C("torrent")
 	for {
 
 		data := make([]map[string]interface{}, perDataSize)
@@ -110,7 +110,7 @@ func (m *monServer) getdata(objectid bson.ObjectId) {
 		if size := len(data); size == perDataSize {
 			objectid = data[size-1]["_id"].(bson.ObjectId)
 		} else {
-			m.printChan <- ("Done!!!")
+			m.printChan <- "Done!!!"
 			break
 		}
 
@@ -149,11 +149,10 @@ func (m *monServer) Put(url string, data []byte, pid int, maxThread chan int) (e
 	io.Copy(ioutil.Discard, resp.Body)
 	//m.printChan <- (string(body))
 	if resp.StatusCode != 201 && resp.StatusCode != 200 {
-		fmt.Println(resp.StatusCode)
 		resp.Body.Close()
 		m.Done()
 		// handle error
-		m.printChan <- "Try Again"
+		m.printChan <- fmt.Sprint(resp.StatusCode) + "Try Again"
 
 		return m.Put(url, data, pid, maxThread)
 	}
@@ -186,37 +185,37 @@ func (m *monServer) parserData(data []map[string]interface{}, maxThread chan int
 	for _, one := range data {
 
 		if _, ok := one["name"]; !ok {
-			m.printChan <- ("Name Err")
+			m.printChan <- "Name Err"
 			return
 		}
 		if _, ok := one["_id"]; !ok {
-			m.printChan <- ("_id Err")
+			m.printChan <- "_id Err"
 			return
 		}
 
 		if _, ok := one["length"]; !ok {
-			m.printChan <- ("length Err")
+			m.printChan <- "length Err"
 			return
 		}
 		if _, ok := one["create_time"]; !ok {
-			m.printChan <- ("create_time Err")
+			m.printChan <- "create_time Err"
 			return
 		}
 		if _, ok := one["category"]; !ok {
-			m.printChan <- ("Category Err")
+			m.printChan <- "Category Err"
 			return
 		}
 		if _, ok := one["hot"]; !ok {
-			m.printChan <- ("Hot Err")
+			m.printChan <- "Hot Err"
 			return
 		}
-
+		objectId := one["_id"].(bson.ObjectId).Hex()
 		syncdata, err := json.Marshal(esData{
 			Title:      one["name"].(string),
-			ObjectID:   one["_id"].(bson.ObjectId).Hex(),
+			HashId:     one["infohash"].(string),
 			Length:     one["length"].(int64),
 			CreateTime: one["create_time"].(int64),
-			FileType:   firstUpper(one["category"].(string)),
+			FileType:   strings.ToLower(one["category"].(string)),
 			Hot:        one["hot"].(int),
 		})
 		if err != nil {
@@ -225,22 +224,11 @@ func (m *monServer) parserData(data []map[string]interface{}, maxThread chan int
 		pid := <-maxThread
 		m.printChan <- "PID:" + strconv.Itoa(pid) + "----" + "---" + one["name"].(string) + "------" + one["_id"].(bson.ObjectId).Hex()
 
-		go m.Put(esURL+one["infohash"].(string), syncdata, pid, maxThread)
+		go m.Put(esURL+objectId, syncdata, pid, maxThread)
 
 	}
 }
-func firstUpper(str string) string {
-	if str == "" {
-		return str
 
-	}
-	first := int(str[0])
-	if 96 < first && first < 123 {
-		return string(first-32) + str[1:]
-
-	}
-	return str
-}
 func (m *monServer) PrintLog() {
 
 	for {
@@ -251,7 +239,7 @@ func (m *monServer) PrintLog() {
 
 func (m *monServer) run(objectId ...string) (data map[string]interface{}) {
 	m.printChan <- "Runing..."
-	c := m.Session.DB("bavbt").C("torrent")
+	c := m.Session.DB(mongoCollection).C("torrent")
 	//selector := bson.M{} //从0开始
 	if len(objectId) == 1 {
 		selector := bson.M{"_id": bson.ObjectIdHex(objectId[0])}
@@ -274,7 +262,26 @@ func (m *monServer) run(objectId ...string) (data map[string]interface{}) {
 
 func main() {
 	objectID := flag.String("id", "", "start with object id")
+	esURLTmp := flag.String("esURL", "", "esURL")                //"http://127.0.0.1:9200/bavbt/torrent/"
+	mongoAddrTmp := flag.String("mongoAddr", "", "mongoAddr")    //"127.0.0.1:27017"
+	mongoDataBaseTmp := flag.String("mongoDataBase", "", "")     //"bavbt"
+	mongoCollectionTmp := flag.String("mongoCollection", "", "") //"torrent"
+	mongoUsernameTmp := flag.String("mongoUsername", "", "")
+	mongoPasswordTmp := flag.String("mongoPassword", "", "")
 	flag.Parse()
+	esURL = *esURLTmp
+	mongoAddr = *mongoAddrTmp
+	mongoDataBase = *mongoDataBaseTmp
+	mongoCollection = *mongoCollectionTmp
+	mongoUsername = *mongoUsernameTmp
+	mongoPassword = *mongoPasswordTmp
+	fmt.Println("objectID", objectID)
+	fmt.Println("esURL", esURL)
+	fmt.Println("mongoAddr", mongoAddr)
+	fmt.Println("mongoDataBase", mongoDataBase)
+	fmt.Println("mongoCollection", mongoCollection)
+	fmt.Println("mongoUsername", mongoUsername)
+	fmt.Println("mongoPassword", mongoPassword)
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	m := newMon()
 	defer m.Session.Close()
