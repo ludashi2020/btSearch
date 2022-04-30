@@ -17,12 +17,14 @@ Tool   | 工具
 
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/framework.png)
 
-##注意:
+## 注意:
 1.项目使用了reuseport系统特性来监听端口，请保持新的linux 内核版本（4.9以上）
+
 2.docker一键安装仅供开发测试和展示程序功能使用，请勿应用于生产环境。
+
 3.若要将本程序应用于生产环境，作者假设使用者都会使用Golang，请Fork主分支的任意一个版本代码开发，不要合并后续主分支代码，主分支代码不保证不进行不兼容改动。
 
-##安装（docker一键安装）：
+## 安装（docker一键安装）：
 ```
 git clone https://github.com/Bmixo/btSearch.git && cd docker && docker-compose up 
 ```
