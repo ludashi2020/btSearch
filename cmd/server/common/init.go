@@ -24,7 +24,7 @@ func checkErr(err error) {
 	}
 }
 func init() {
-	confPath := flag.String("c", "config/server.conf", "web server config file")
+	confPath := flag.String("c", "server.conf", "web server config file")
 
 	flag.Parse()
 

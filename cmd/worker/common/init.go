@@ -21,7 +21,7 @@ func checkErr(err error) {
 	}
 }
 func init() {
-	confPath := flag.String("c", "config/worker.conf", "worker config file")
+	confPath := flag.String("c", "worker.conf", "worker config file")
 
 	flag.Parse()
 

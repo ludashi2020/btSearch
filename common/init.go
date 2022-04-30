@@ -3,14 +3,14 @@ package common
 import (
 	"fmt"
 	"github.com/Bmixo/btSearch/pkg/pongo2gin"
+	mapset "github.com/deckarep/golang-set"
 	elasticsearch "github.com/elastic/go-elasticsearch/v6"
+	"github.com/gin-gonic/gin"
+	mgo "gopkg.in/mgo.v2"
 	"log"
 	"os"
 	"path/filepath"
-
-	mapset "github.com/deckarep/golang-set"
-	"github.com/gin-gonic/gin"
-	mgo "gopkg.in/mgo.v2"
+	"time"
 )
 
 func checkErr(err error) {
@@ -38,7 +38,9 @@ func init() {
 	esURL = os.Getenv("esURL")
 	WebServerAddr = os.Getenv("webServerAddr")
 	esUrlBase := os.Getenv("esUrlBase")
-	{
+	for {
+		time.Sleep(time.Second)
+		log.Println("trying to connect es")
 		var err error
 		ES, err = elasticsearch.NewClient(elasticsearch.Config{
 			Addresses: []string{esUrlBase},
@@ -46,14 +48,18 @@ func init() {
 			Password:  esPassWord,
 		})
 		if err != nil {
-			log.Fatalf("Error creating the client: %s", err)
+			log.Printf("Error creating the client: %s", err)
+			continue
 		}
 		res, err := ES.Info()
 		if err != nil {
-			log.Fatalf("Error getting response: %s", err)
+			log.Printf("Error getting response: %s", err)
+			continue
 		}
-		defer res.Body.Close()
+		res.Body.Close()
+		log.Println("connect es suss")
 		log.Println(res)
+		break
 	}
 }
 

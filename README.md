@@ -17,78 +17,17 @@ Tool   | 工具
 
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/framework.png)
 
-## 注意:
-
+##注意:
 1.项目使用了reuseport系统特性来监听端口，请保持新的linux 内核版本（4.9以上）
+2.docker一键安装仅供开发测试和展示程序功能使用，请勿应用于生产环境。
+3.若要将本程序应用于生产环境，作者假设使用者都会使用Golang，请Fork主分支的任意一个版本代码开发，不要合并后续主分支代码，主分支代码不保证不进行不兼容改动。
 
-## 3.安装
-
-1. 在安装环境前您需要配置golang环境  [Go](https://golang.org/) 下载地址
-2. 安装python和mongodb
-
+##安装（docker一键安装）：
 ```
-sudo apt install mongodb
-sudo apt install python3 python3-pip
-pip3 install elastic-doc-manager[elastic5]
+git clone https://github.com/Bmixo/btSearch.git && cd docker && docker-compose up 
 ```
 
-3. 服务端安装
-
-```
-go get github.com/Bmixo/btSearch/server
-
-```
-
-4. worker安装
-
-```
-go get github.com/Bmixo/btSearch/worker
-```
-
-5. Elasticsearch dockerp配置
-
-```
-docker run --restart=always -p 9200:9200 -p 9300:9300 --name=tmp docker.elastic.co/elasticsearch/elasticsearch:5.6.0
-```
-
-安装analysis-ik分词器
-
-```
-docker ps
-docker exec -it $dockid /bin/bash
-./bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v5.6.0/elasticsearch-analysis-ik-5.6.0.zip
-
-```
-
-配置elasticsearch的数据存放目录
-
-```
-mkdir -p /data/docker
-docker cp $dockid:/usr/share/elasticsearch/ /data/docker
-chmod 777 -R /data/
-```
-
-运行Elasticsearch docker服务
-
-```
-docker run --restart=always -p 9200:9200 -p 9300:9300 --name=es \
--e ES_JAVA_OPTS="-Xms1024m -Xmx1024m" \
--v /data/docker/elasticsearch/data:/usr/share/elasticsearch/data \
--v /data/docker/elasticsearch/logs:/usr/share/elasticsearch/logs \
--v /data/docker/elasticsearch/config:/usr/share/elasticsearch/config \
--v /data/docker/elasticsearch/plugins:/usr/share/elasticsearch/plugins \
--v /etc/localtime:/etc/localtime \
--v /etc/timezone:/etc/timezone \
-docker.elastic.co/elasticsearch/elasticsearch:5.6.0
-```
-
-配置正确的话执行下面命令可以看到当前Elasticsearch的运行状态
-
-```
-curl --user elastic:changeme -XGET 'http://127.0.0.1:9200/_cat/health'
-``` 
-
-配置Elasticsearch默认分词器
+5. 设置Elasticsearch默认分词器为ik分词器 (可选)
 
 ```
 curl --user elastic:changeme -XPUT http://localhost:9200/bavbt -H 'Content-Type: application/json'
@@ -112,39 +51,10 @@ curl --user elastic:changeme -XPUT localhost:9200/bavbt/_settings?pretty -d '{
 curl --user elastic:changeme -XPOST 'localhost:9200/bavbt/_open'
 ```
 
-## 4.运行
-
-首先需要配置相关环境变量
-
-```
-    mongoAddr=127.0.0.1:27017
-    mongoDatabase=bavbt
-    mongoCollection=torrent
-    mongoUsername=root
-    mongoPassWord=root
-    esUsername=elastic
-    esPassWord=changeme
-    esURL=http://127.0.0.1:9200/bavbt/torrent/
-    esUrlBase=http://127.0.0.1:9200
-    webServerAddr=127.0.0.1:7878
-```
-
-服务端运行
-
-```
-go run github.com/Bmixo/btSearch/server
-```
-
-worker运行
-
-```
-go run github.com/Bmixo/btSearch/worker
-```
-
 ## 5.TODO
 
 - [ ] 后台数据展示
-- [ ] 打包docker镜像
+- [x] 打包docker镜像
 - [ ] 提供k8s高可用部署方案（mongodb sharding + 无状态均衡负载master + etcd）
 - [ ] gin迁移iris
 

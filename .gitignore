@@ -5,3 +5,5 @@ worker/config/worker.conf
 *.bat
 /docker/torrent-web
 /cmd/mongo2es/mongo2es
+/docker/btsearch/misc/
+/docker/btsearch/torrent-web

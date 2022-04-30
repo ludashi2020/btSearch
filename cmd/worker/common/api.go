@@ -30,7 +30,7 @@ func (self *Worker) HandleMsg() {
 				buf := make([]byte, 512)
 				n, addr, err := self.udpListener.ReadFrom(buf)
 				if err != nil {
-					self.printChan <- (err.Error())
+					self.printChan <- err.Error()
 					continue
 				}
 				self.count[1].rate.Incr(1)
@@ -73,7 +73,7 @@ func (self *Worker) FindNode() {
 	for {
 		if self.count[4].rate.Rate() == 0 {
 			for _, address := range bootstapNodes {
-				self.printChan <- ("send to: " + address)
+				self.printChan <- "send to: " + address
 				self.sendFindNode(&node{
 					addr: address,
 					id:   self.localID,
@@ -106,10 +106,10 @@ func (self *Worker) Server() {
 func (self *Worker) timer() {
 	for {
 		self.printChan <- "Rev: " + strconv.FormatInt(self.count[1].rate.Rate(), 10) + "r/sec" +
-					" Decode: " + strconv.FormatInt(self.count[3].rate.Rate(), 10) + "r/sec" +
-					" Suss: " + strconv.FormatInt(self.count[0].rate.Rate(), 10) + "p/sec" + " FindNode: " +
-					strconv.FormatInt(self.count[4].rate.Rate(), 10) + "p/sec" + " Drop: " +
-					strconv.FormatInt(self.count[2].rate.Rate(), 10) + "r/sec"
+			" Decode: " + strconv.FormatInt(self.count[3].rate.Rate(), 10) + "r/sec" +
+			" Suss: " + strconv.FormatInt(self.count[0].rate.Rate(), 10) + "p/sec" + " FindNode: " +
+			strconv.FormatInt(self.count[4].rate.Rate(), 10) + "p/sec" + " Drop: " +
+			strconv.FormatInt(self.count[2].rate.Rate(), 10) + "r/sec"
 		time.Sleep(time.Second * 1)
 	}
 
