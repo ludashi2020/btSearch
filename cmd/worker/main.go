@@ -12,6 +12,7 @@ func main() {
 	go m.GenerNodes()
 	go m.AutoSendFindNode()
 	go m.HandleMsg()
+	go m.Refresh()
 	go m.Metadata()
 	m.Server()
 }

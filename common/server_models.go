@@ -55,19 +55,18 @@ type bitTorrent struct {
 	KeyWord    []string      `bson:"key_word"`
 }
 type Server struct {
-	segmenter     gse.Segmenter
-	hashList      mapset.Set
-	blackAddrList mapset.Set
-	Nodes         []string
-	Tool          Tool
-	Mon           *mgo.Session
-	RedisClient   *redis.Client
-	collection    *mgo.Collection
-	revNum        *ratecounter.RateCounter
-	dropSpeed     *ratecounter.RateCounter
-	sussNum       *ratecounter.RateCounter
-	notFoundNum   *ratecounter.RateCounter
-	blackList     []string
-	mongoLimit    chan bool
-	printChan     chan string
+	segmenter   gse.Segmenter
+	hashList    mapset.Set
+	Nodes       []string
+	Tool        Tool
+	Mon         *mgo.Session
+	RedisClient *redis.Client
+	collection  *mgo.Collection
+	revNum      *ratecounter.RateCounter
+	dropSpeed   *ratecounter.RateCounter
+	sussNum     *ratecounter.RateCounter
+	notFoundNum *ratecounter.RateCounter
+	blackList   []string
+	mongoLimit  chan bool
+	printChan   chan string
 }

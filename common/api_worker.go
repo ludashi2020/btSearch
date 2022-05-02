@@ -19,6 +19,14 @@ import (
 	"github.com/Bmixo/btSearch/pkg/bencode"
 )
 
+func (m *Worker) Refresh() {
+	for {
+		time.Sleep(time.Second * 60)
+		m.blackAddrList.Clear()
+		m.hashList.Clear()
+	}
+}
+
 func (m *Worker) HandleMsg() {
 	for i := 0; i < 20; i++ {
 		go m.onMessage()
@@ -105,11 +113,13 @@ func (m *Worker) Server() {
 }
 func (m *Worker) timer() {
 	for {
-		m.printChan <- "Rev: " + strconv.FormatInt(m.count[1].rate.Rate(), 10) + "r/sec" +
-			" Decode: " + strconv.FormatInt(m.count[3].rate.Rate(), 10) + "r/sec" +
-			" Suss: " + strconv.FormatInt(m.count[0].rate.Rate(), 10) + "p/sec" + " FindNode: " +
-			strconv.FormatInt(m.count[4].rate.Rate(), 10) + "p/sec" + " Drop: " +
-			strconv.FormatInt(m.count[2].rate.Rate(), 10) + "r/sec"
+		m.printChan <- "Rev: " + strconv.FormatInt(m.count[1].rate.Rate(), 10) + "/sec" +
+			" Decode: " + strconv.FormatInt(m.count[3].rate.Rate(), 10) + "/sec" +
+			" Suss: " + strconv.FormatInt(m.count[0].rate.Rate(), 10) + "/sec" +
+			" FindNode: " + strconv.FormatInt(m.count[4].rate.Rate(), 10) + "/sec" +
+			" Drop: " + strconv.FormatInt(m.count[2].rate.Rate(), 10) + "/sec" +
+			" HashList:" + strconv.Itoa(m.hashList.Cardinality()) + "/sec" +
+			" blackAddrList:" + strconv.Itoa(m.blackAddrList.Cardinality())
 		time.Sleep(time.Second * 1)
 	}
 
@@ -292,9 +302,14 @@ func (m *Worker) onAnnouncePeer(dict *map[string]interface{}, from net.Addr) {
 		<-m.Tool.ToolSendChan
 		m.count[2].rate.Incr(1)
 	}
+	infoHash := hex.EncodeToString([]byte(infohash))
+	if m.hashList.Contains(infoHash) {
+		return
+	}
+	m.hashList.Add(infoHash)
 	m.Tool.ToolSendChan <- torrent.TData{
 		TDataCode: torrent.TDataCode_TDataCodeVerifyHashExist,
-		Hash:      hex.EncodeToString([]byte(infohash)),
+		Hash:      infoHash,
 		Addr:      from.String(),
 	}
 	m.count[0].rate.Incr(1)
@@ -409,10 +424,10 @@ func (m *Worker) Metadata() {
 					continue
 				}
 				m.Tool.ToolSendChan <- torrent.TData{
+					Hash:        tdatax.Hash,
 					TDataCode:   torrent.TDataCode_TDataCodeNeedHandleTorrentData,
 					TorrentData: data,
 				}
-				m.sussNum.Incr(1)
 				m.hashList.Remove(tdatax.Hash)
 				//m.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
 				continue

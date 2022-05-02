@@ -18,3 +18,4 @@ cmd/worker/worker
 /cmd/server/common.zip
 /cmd/worker/common.zip
 cmd/server/server
+cmd/worker/main

@@ -72,7 +72,6 @@ func (m *Server) handleData() {
 			if err != nil {
 				continue
 			}
-
 			segments := m.segmenter.Segment([]byte(torrent.Name))
 			for _, j := range gse.ToSlice(segments, false) {
 				if utf8.RuneCountInString(j) < 2 || utf8.RuneCountInString(j) > 15 {
@@ -119,7 +118,6 @@ func (m *Server) NewServerConn() {
 func (m *Server) Refresh() {
 	for {
 		time.Sleep(time.Second * 240)
-		m.blackAddrList.Clear()
 		m.hashList.Clear()
 	}
 }
@@ -141,7 +139,6 @@ func (m *Server) CheckSpeed() {
 			" NotFoundSpeed: " + strconv.FormatInt(m.notFoundNum.Rate(), 10) + "/sec" +
 			" SussSpeed: " + strconv.FormatInt(m.sussNum.Rate(), 10) + "/sec" +
 			" HashList:" + strconv.Itoa(m.hashList.Cardinality()) +
-			" blackAddrList:" + strconv.Itoa(m.blackAddrList.Cardinality()) +
 			"\n"
 		time.Sleep(time.Second)
 	}

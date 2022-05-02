@@ -107,19 +107,18 @@ func NewSniffer() *Server {
 	segmenter.LoadDict("config/dictionary.txt")
 
 	return &Server{
-		segmenter:     segmenter, //分词
-		printChan:     make(chan string, 5),
-		hashList:      mapset.NewSet(),
-		blackAddrList: mapset.NewSet(),
-		Tool:          *NewTool(),
-		Nodes:         wkNodes,
-		Mon:           session,
-		RedisClient:   redisClient,
-		mongoLimit:    make(chan bool, mongoConnectLimitNum),
-		blackList:     loadBlackList(),
-		revNum:        ratecounter.NewRateCounter(1 * time.Second),
-		dropSpeed:     ratecounter.NewRateCounter(1 * time.Second),
-		sussNum:       ratecounter.NewRateCounter(1 * time.Second),
-		notFoundNum:   ratecounter.NewRateCounter(1 * time.Second),
+		segmenter:   segmenter, //分词
+		printChan:   make(chan string, 5),
+		hashList:    mapset.NewSet(),
+		Tool:        *NewTool(),
+		Nodes:       wkNodes,
+		Mon:         session,
+		RedisClient: redisClient,
+		mongoLimit:  make(chan bool, mongoConnectLimitNum),
+		blackList:   loadBlackList(),
+		revNum:      ratecounter.NewRateCounter(1 * time.Second),
+		dropSpeed:   ratecounter.NewRateCounter(1 * time.Second),
+		sussNum:     ratecounter.NewRateCounter(1 * time.Second),
+		notFoundNum: ratecounter.NewRateCounter(1 * time.Second),
 	}
 }
