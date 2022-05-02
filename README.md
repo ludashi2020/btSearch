@@ -30,7 +30,16 @@ git clone https://github.com/Bmixo/btSearch.git && cd docker && docker-compose u
 ```
 等待片刻系统初始化后，开始采集数据。程序网页界面请访问 http://127.0.0.1:8080
 
-5. 设置Elasticsearch默认分词器为ik分词器 (可选)
+4. 依赖环境 
+   * 确保运行程序的服务器能被互联网外部主机访问到
+```
+apt update
+apt install curl git docker.io
+```
+
+
+
+6. 设置Elasticsearch默认分词器为ik分词器 (可选)
 
 ```
 curl --user elastic:changeme -XPUT http://localhost:9200/bavbt -H 'Content-Type: application/json'
