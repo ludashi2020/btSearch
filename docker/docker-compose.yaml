@@ -2,6 +2,7 @@ version: "3"
 services:
   es:
     image: bmixo/torrent-es:1.0.1
+    restart: always
     environment:
       - ES_JAVA_OPTS=-Xms2g -Xmx2g
     ports:
@@ -20,6 +21,7 @@ services:
 
   btsearch:
     image: bmixo/torrent-btsearch:1.0.1
+    restart: always
     ports:
       - "8080:8080"
     environment:
@@ -39,6 +41,7 @@ services:
 
   worker:
     image: bmixo/torrent-worker:1.0.1
+    restart: always
     ports:
       - "65512:65512"
       - "6999:6999/udp"
@@ -51,6 +54,7 @@ services:
 
   server:
     image: bmixo/torrent-server:1.0.1
+    restart: always
     environment:
       mongoAddr: db:27017
       mongoDatabase: torrent
