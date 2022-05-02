@@ -37,5 +37,14 @@ services:
       - es
       - db
 
+  worker:
+    image: worker
+    ports:
+      - "9898:9898"
+      - "6999:6999/udp"
+
+  server:
+    image: server
+
 volumes:
   db-data:

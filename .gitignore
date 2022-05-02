@@ -7,3 +7,11 @@ worker/config/worker.conf
 /cmd/mongo2es/mongo2es
 /docker/btsearch/misc/
 /docker/btsearch/torrent-web
+/cmd/server/server.conf
+/cmd/worker/worker.conf
+/docker/worker/worker
+/docker/worker/worker.conf
+/docker/server/server.conf
+/docker/server/server
+/docker/server/config/
+cmd/worker/worker

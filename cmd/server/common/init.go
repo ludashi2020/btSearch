@@ -2,7 +2,7 @@ package common
 
 import (
 	"flag"
-	"fmt"
+	"log"
 	"net"
 	"os"
 	"strconv"
@@ -30,7 +30,7 @@ func init() {
 
 	config, err := goconfig.LoadConfigFile(*confPath)
 	if err != nil {
-		fmt.Println("Config file not exist")
+		log.Println("Config file not exist")
 		os.Exit(-1)
 	}
 	cfg = config
@@ -110,7 +110,7 @@ func NewSniffer() *Server {
 	}
 
 	var segmenter gse.Segmenter
-	segmenter.LoadDict()
+	segmenter.LoadDict("config/dictionary.txt")
 
 	return &Server{
 		segmenter:     segmenter, //分词

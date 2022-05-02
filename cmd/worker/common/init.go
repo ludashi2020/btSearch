@@ -3,7 +3,7 @@ package common
 import (
 	"context"
 	"flag"
-	"fmt"
+	"log"
 	"net"
 	"os"
 	"strconv"
@@ -27,7 +27,7 @@ func init() {
 
 	config, err := goconfig.LoadConfigFile(*confPath)
 	if err != nil {
-		fmt.Println("Config file not exist")
+		log.Println("Config file not exist")
 		os.Exit(-1)
 	}
 	cfg = config
