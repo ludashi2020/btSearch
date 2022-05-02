@@ -31,7 +31,7 @@ git clone https://github.com/Bmixo/btSearch.git && cd docker && docker-compose u
 等待片刻系统初始化后，开始采集数据。程序网页界面请访问 http://127.0.0.1:8080
 
 4. 依赖环境 
-   * 确保运行程序的服务器能被互联网外部主机访问到
+* 确保运行程序的服务器能被互联网外部主机访问到
 ```
 apt update
 apt install curl git docker.io
