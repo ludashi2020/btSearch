@@ -61,7 +61,9 @@ services:
       wkNodes: worker:65512
       esURL: http://es:9200/bavbt/torrent/
       banList: config/banList.txt
-
+    depends_on:
+      - es
+      - db
 volumes:
   db-data:
   es-data:
