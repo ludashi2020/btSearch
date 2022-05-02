@@ -19,7 +19,7 @@ services:
 
 
   btsearch:
-    image: btsearch
+    image: bmixo/torrent-btsearch:1.0.1
     ports:
       - "8080:8080"
     environment:
@@ -38,13 +38,13 @@ services:
       - db
 
   worker:
-    image: worker
+    image: bmixo/torrent-worker:1.0.1
     ports:
       - "9898:9898"
       - "6999:6999/udp"
 
   server:
-    image: server
+    image: bmixo/torrent-server:1.0.1
 
 volumes:
   db-data:

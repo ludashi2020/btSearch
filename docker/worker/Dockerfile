@@ -1,7 +1,7 @@
-FROM bmixo/images:torrent-es1
+FROM debian:stable
 
-#RUN apt update
-#RUN apt install curl inetutils-ping net-tools dnsutils wget -y
+RUN apt update
+RUN apt install curl inetutils-ping net-tools dnsutils wget -y
 
 WORKDIR /dist
 COPY ./worker ./worker
