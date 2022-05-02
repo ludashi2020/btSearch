@@ -8,6 +8,7 @@ import (
 	reuse "github.com/libp2p/go-reuseport"
 	"log"
 	randx "math/rand"
+	"os"
 	"strings"
 
 	"encoding/binary"
@@ -102,9 +103,14 @@ func (m *Worker) FindNode() {
 
 func (m *Worker) PrintLog() {
 	go m.timer()
+	disableLog := os.Getenv("disableLog") == "true"
 	for {
 		//log.Printf("\r")
-		log.Printf("%s", <-m.printChan)
+		if disableLog {
+			<-m.printChan
+		} else {
+			log.Printf("%s", <-m.printChan)
+		}
 	}
 }
 

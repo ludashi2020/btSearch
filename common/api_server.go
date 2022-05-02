@@ -149,10 +149,14 @@ func (m *Server) Refresh() {
 }
 
 func (m *Server) PrintLog() {
-
+	disableLog := os.Getenv("disableLog") == "true"
 	for {
 		//fmt.Printf("\r")
-		fmt.Printf("%s", <-m.printChan)
+		if disableLog {
+			<-m.printChan
+		} else {
+			fmt.Printf("%s", <-m.printChan)
+		}
 	}
 
 }

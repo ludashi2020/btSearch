@@ -51,7 +51,8 @@ services:
       nodeChanSize: 10000
       udpPort: 6999
       verifyPassword: 97711111
-
+      disableLog: false
+      
   server:
     image: bmixo/torrent-server:1.0.1
     restart: always
@@ -68,6 +69,7 @@ services:
       wkNodes: worker:65512
       esURL: http://es:9200/bavbt/torrent/
       banList: config/banList.txt
+      disableLog: false
     depends_on:
       - es
       - db
