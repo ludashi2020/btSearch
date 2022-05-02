@@ -11,9 +11,9 @@ services:
       - es-data:/usr/share/elasticsearch
   db:
     image: mongo:4.4.12
-#    environment:
-#      - MONGO_INITDB_ROOT_USERNAME=torrent
-#      - MONGO_INITDB_ROOT_PASSWORD=torrent
+    #    environment:
+    #      - MONGO_INITDB_ROOT_USERNAME=torrent
+    #      - MONGO_INITDB_ROOT_PASSWORD=torrent
     ports:
       - "27017:27017"
     volumes:
@@ -28,8 +28,8 @@ services:
       mongoAddr: db:27017
       mongoDatabase: torrent
       mongoCollection: torrent
-#      mongoUsername: torrent
-#      mongoPassWord: torrent
+      #      mongoUsername: torrent
+      #      mongoPassWord: torrent
       esUsername: elastic
       esPassWord: changeme
       esURL: http://es:9200/bavbt/torrent/
@@ -61,6 +61,9 @@ services:
       mongoCollection: torrent
       #      mongoUsername: torrent
       #      mongoPassWord: torrent
+      esUsername: elastic
+      esPassWord: changeme
+      esUrlBase: http://es:9200
       verifyPassord: 97711111
       wkNodes: worker:65512
       esURL: http://es:9200/bavbt/torrent/

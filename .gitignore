@@ -20,3 +20,4 @@ cmd/worker/worker
 cmd/server/server
 cmd/worker/main
 /torrent-web
+cmd/server/main

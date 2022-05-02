@@ -62,6 +62,7 @@ var (
 	authDataBase         = ""
 	collection           = ""
 	esURL                = ""
+	esUrlBase            = ""
 	WebServerAddr        = ""
 	cfg                  *goconfig.ConfigFile
 )

@@ -1,6 +1,8 @@
 package common
 
 import (
+	"github.com/elastic/go-elasticsearch/v6"
+	"log"
 	"net"
 	"os"
 	"strings"
@@ -30,10 +32,36 @@ func InitServer() {
 	}
 	banList = os.Getenv("banList")
 	esURL = os.Getenv("esURL")
+	esUrlBase = os.Getenv("esUrlBase")
+	esUsername = os.Getenv("esUsername")
+	esPassWord = os.Getenv("esPassWord")
 }
 
 //NewSniffer :NewSniffer
 func NewSniffer() *Server {
+	for {
+		time.Sleep(time.Second)
+		log.Println("trying to connect es")
+		var err error
+		ES, err = elasticsearch.NewClient(elasticsearch.Config{
+			Addresses: []string{esUrlBase},
+			Username:  esUsername,
+			Password:  esPassWord,
+		})
+		if err != nil {
+			log.Printf("Error creating the client: %s", err)
+			continue
+		}
+		res, err := ES.Info()
+		if err != nil {
+			log.Printf("Error getting response: %s", err)
+			continue
+		}
+		res.Body.Close()
+		log.Println("connect es suss")
+		log.Println(res)
+		break
+	}
 	dialInfo := &mgo.DialInfo{
 		Addrs:  []string{mongoAddr},
 		Direct: false,

@@ -37,7 +37,7 @@ func InitCommon() {
 	esPassWord = os.Getenv("esPassWord")
 	esURL = os.Getenv("esURL")
 	WebServerAddr = os.Getenv("webServerAddr")
-	esUrlBase := os.Getenv("esUrlBase")
+	esUrlBase = os.Getenv("esUrlBase")
 	for {
 		time.Sleep(time.Second)
 		log.Println("trying to connect es")
