@@ -26,7 +26,7 @@ Tool   | 工具
 
 ## 安装（docker一键安装）：
 ```
-git clone https://github.com/Bmixo/btSearch.git && cd docker && docker-compose up 
+git clone https://github.com/Bmixo/btSearch.git && cd btSearch/docker && docker-compose up 
 ```
 等待片刻系统初始化后，开始采集数据。程序网页界面请访问 http://127.0.0.1:8080
 
