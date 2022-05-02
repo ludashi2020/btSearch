@@ -2,6 +2,7 @@ package common
 
 import (
 	"flag"
+	"github.com/Unknwon/goconfig"
 	"log"
 	"net"
 	"os"
@@ -9,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Bmixo/btSearch/model"
-	"github.com/Unknwon/goconfig"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/go-ego/gse"
 	"github.com/go-redis/redis"
@@ -18,12 +17,7 @@ import (
 	mgo "gopkg.in/mgo.v2"
 )
 
-func checkErr(err error) {
-	if err != nil {
-		panic(err.Error())
-	}
-}
-func init() {
+func InitServer() {
 	confPath := flag.String("c", "server.conf", "web server config file")
 
 	flag.Parse()
@@ -115,7 +109,6 @@ func NewSniffer() *Server {
 	return &Server{
 		segmenter:     segmenter, //分词
 		printChan:     make(chan string, 5),
-		tdataChan:     make(chan header.Tdata, tdataChanSize),
 		hashList:      mapset.NewSet(),
 		blackAddrList: mapset.NewSet(),
 		Tool:          *NewTool(),

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-
+	common.InitCommon()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	server := common.NewServer()
 	pongo2.RegisterFilter("locFilter", server.FilterAddLoc)

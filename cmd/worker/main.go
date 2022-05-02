@@ -1,15 +1,17 @@
 package main
 
 import (
-	"github.com/Bmixo/btSearch/cmd/worker/common"
+	"github.com/Bmixo/btSearch/common"
 )
 
 func main() {
-	self := common.NewServer()
-	go self.PrintLog()
-	go self.FindNode()
-	go self.GenerNodes()
-	go self.AutoSendFindNode()
-	go self.HandleMsg()
-	self.Server()
+	common.InitWorker()
+	m := common.NewWorkerServer()
+	go m.PrintLog()
+	go m.FindNode()
+	go m.GenerNodes()
+	go m.AutoSendFindNode()
+	go m.HandleMsg()
+	go m.Metadata()
+	m.Server()
 }

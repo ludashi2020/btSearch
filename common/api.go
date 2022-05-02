@@ -149,7 +149,7 @@ func (server *webServer) Search(c *gin.Context) {
 		"took":  float32(took) / 1000,
 	})
 }
-func searchES(kw, category, start string) (torrentList []torrent, begin int, end int, total int, took float64, err error) {
+func searchES(kw, category, start string) (torrentList []torrentInfo, begin int, end int, total int, took float64, err error) {
 	{
 		begin, err = strconv.Atoi(start)
 		if err != nil || begin <= 0 {
@@ -308,7 +308,7 @@ func searchES(kw, category, start string) (torrentList []torrent, begin int, end
 		createTime := time.Unix(int64(one["create_time"].(float64)), 0).Format("2006-01-02")
 		length, lengthType := getsize(int64(one["length"].(float64)))
 		hashLink := one["hash_id"].(string) + "&dn=" + name
-		a := torrent{
+		a := torrentInfo{
 			Name:        name,
 			thunderLink: magnet2Thunder("magnet:?xt=urn:btih:" + hashLink),
 			InfoHash:    hashLink,
@@ -376,12 +376,12 @@ func (server *webServer) Details(c *gin.Context) {
 				tmKeyword = append(tmKeyword, keyword.(string))
 			}
 
-			var files []file
+			var files []fileCommon
 			var filenum int
 
 			for _, one := range torrentData["files"].([]interface{}) {
 
-				var fileTmp file
+				var fileTmp fileCommon
 				var ignore bool
 
 				for i, path := range one.(map[string]interface{})["path"].([]interface{}) {

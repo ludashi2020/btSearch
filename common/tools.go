@@ -2,12 +2,12 @@ package common
 
 import (
 	"context"
+	"github.com/Bmixo/btSearch/api/api_server_1/torrent"
 	"log"
 	"net"
 	"sync"
 	"time"
 
-	"github.com/Bmixo/btSearch/model"
 	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
@@ -16,12 +16,16 @@ import (
 type Link struct {
 	Conn         *grpc.ClientConn
 	Addr         string
-	LinkPostChan chan header.Tdata
+	LinkPostChan chan torrent.TData
 }
+
 type Tool struct {
+	torrent.RPCServer
 	Links        []Link
-	ToolPostChan chan header.Tdata
+	ToolSendChan chan torrent.TData
+	ToolRevChan  chan torrent.TData
 }
+
 type Client struct {
 	uid     uint64
 	conn    *websocket.Conn
@@ -37,46 +41,67 @@ type ClientCollection struct {
 
 func NewTool() *Tool {
 	return &Tool{
-		ToolPostChan: make(chan header.Tdata, 1000),
+		ToolSendChan: make(chan torrent.TData, 1000),
+		ToolRevChan:  make(chan torrent.TData, 1000),
 		Links:        make([]Link, 0),
 	}
-
 }
+
 func (m *Tool) Connect(i int) {
 	if m.Links[i].Conn == nil {
 	reconnect:
 		var err error
-		log.Printf("\non connect: [%v]\n", m.Links[i].Addr)
-		m.Links[i].Conn, err = grpc.Dial(m.Links[i].Addr, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(time.Second*3))
+		log.Printf("on connect: [%v]\n", m.Links[i].Addr)
+		m.Links[i].Conn, err = grpc.Dial(m.Links[i].Addr, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(time.Second*5))
 		if err != nil || m.Links[i].Conn == nil {
-			log.Printf("\nconnect fail: [%v]\n", m.Links[i].Addr)
+			log.Printf("connect fail: [%v]\n", m.Links[i].Addr)
 			time.Sleep(time.Millisecond * 200)
 			goto reconnect
 		}
-		log.Printf("\nconnect success: [%v]\n", m.Links[i].Addr)
-		client := header.NewRPCClient(m.Links[i].Conn)
+		log.Printf("connect success: [%v]\n", m.Links[i].Addr)
+		client := torrent.NewRPCClient(m.Links[i].Conn)
 		ctx := context.Background()
-		stream, err := client.Communite(ctx)
+		stream, err := client.MessageStream(ctx)
 		if err != nil {
 			m.Links[i].Conn = nil
 			//m.Links[i].Conn.Close()
 			goto reconnect
 		}
-		if err := stream.Send(&header.Verify{Password: verifyPassord}); err != nil {
+		if err := stream.Send(&torrent.Message{
+			Code:   torrent.Code_CodeVerifyPassWord,
+			Verify: &torrent.Verify{Password: verifyPassord},
+		}); err != nil {
 			m.Links[i].Conn = nil
 			goto reconnect
 		}
+		go func() {
+			for {
+				tDataTmp := <-m.ToolSendChan
+				if stream == nil {
+					return
+				}
+				err := stream.Send(&torrent.Message{
+					Code:  torrent.Code_CodeMessageTData,
+					TData: &tDataTmp,
+				})
+				if err != nil {
+					stream = nil
+				}
+			}
+		}()
 		for {
-			data, err := stream.Recv()
-			if err != nil {
+			if stream == nil {
 				goto reconnect
 			}
-			if len(m.ToolPostChan) != cap(m.ToolPostChan) {
-				m.ToolPostChan <- *data
+			data, err := stream.Recv()
+			if err != nil {
+				stream = nil
+				goto reconnect
 			}
-
+			if len(m.ToolRevChan) != cap(m.ToolRevChan) {
+				m.ToolRevChan <- *data.TData
+			}
 		}
-
 	}
 }
 
@@ -94,7 +119,7 @@ func NewClientCollection() *ClientCollection {
 
 var wsCollection = NewClientCollection()
 
-func (m *Tool) SendData(postData header.Tdata) string {
+func (m *Tool) SendData(postData torrent.TData) string {
 	for i := 0; i < len(m.Links); i++ {
 		if m.Links[i].LinkPostChan == nil {
 			continue
@@ -104,7 +129,7 @@ func (m *Tool) SendData(postData header.Tdata) string {
 	return ""
 }
 
-func (m *Tool) Communite(stream header.RPC_CommuniteServer) error {
+func (m *Tool) MessageStream(stream torrent.RPC_MessageStreamServer) error {
 
 	ctx := stream.Context()
 
@@ -118,7 +143,11 @@ func (m *Tool) Communite(stream header.RPC_CommuniteServer) error {
 			log.Println("\nrev error\n")
 			return ctx.Err()
 		}
-		if verify.Password != verifyPassord {
+		if verify.Code != torrent.Code_CodeVerifyPassWord {
+			log.Println("\npassword error\n")
+			return ctx.Err()
+		}
+		if verify.Verify == nil || verify.Verify.Password != verifyPassord {
 			log.Println("\npassword error\n")
 			return ctx.Err()
 		}
@@ -131,20 +160,43 @@ func (m *Tool) Communite(stream header.RPC_CommuniteServer) error {
 			log.Println("\nip is nil\n")
 			return ctx.Err()
 		}
+
+		go func() {
+			for {
+				if stream == nil {
+					log.Println("exit recv")
+					return
+				}
+				messageRev, err := stream.Recv()
+				if err != nil {
+					log.Println("\n" + ctx.Err().Error() + "\n")
+					return
+				}
+				if messageRev.Code != torrent.Code_CodeMessageTData || messageRev.TData == nil {
+					log.Println("message error")
+					continue
+				}
+				m.ToolRevChan <- *messageRev.TData
+			}
+		}()
 		for {
-			data := <-m.ToolPostChan
-			err := stream.Send(&data)
+			data := <-m.ToolSendChan
+			err := stream.Send(&torrent.Message{
+				Code:  torrent.Code_CodeMessageTData,
+				TData: &data,
+			})
 			if err != nil {
+				stream = nil
 				log.Println("\n" + ctx.Err().Error() + "\n")
 				return ctx.Err()
 			}
-
 		}
 	}
 }
+
 func (m *Tool) ToolServer(toolServer *Tool) {
 	server := grpc.NewServer()
-	header.RegisterRPCServer(server, toolServer)
+	torrent.RegisterRPCServer(server, toolServer)
 	address, err := net.Listen("tcp", listenerAddr)
 	if err != nil {
 		log.Println("\n" + (err.Error()) + "\n")

@@ -3,6 +3,8 @@ package common
 import (
 	"context"
 	"flag"
+	"github.com/Bmixo/btSearch/api/api_server_1/torrent"
+	mapset "github.com/deckarep/golang-set"
 	"log"
 	"net"
 	"os"
@@ -15,12 +17,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-func checkErr(err error) {
-	if err != nil {
-		panic(err.Error())
-	}
-}
-func init() {
+func InitWorker() {
 	confPath := flag.String("c", "worker.conf", "worker config file")
 
 	flag.Parse()
@@ -51,7 +48,7 @@ func init() {
 
 }
 
-func NewServer() *Worker {
+func NewWorkerServer() *Worker {
 	listenConfig := net.ListenConfig{
 		Control: reuse.Control,
 	}
@@ -92,5 +89,10 @@ func NewServer() *Worker {
 		printChan:   make(chan string, 5),
 		messageChan: make(chan *message, nodeChanSize),
 		dataChan:    make(chan tdata, 5),
+		//server
+		tdataChan:     make(chan torrent.TData, tdataChanSize),
+		hashList:      mapset.NewSet(),
+		blackAddrList: mapset.NewSet(),
+		sussNum:       ratecounter.NewRateCounter(1 * time.Second),
 	}
 }

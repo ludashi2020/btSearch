@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package torrent;
+option go_package = "api_server_1/torrent;torrent";
+
+
+enum Code{
+  CodeUnDefine = 0;
+  CodeVerifyPassWord = 1;//验证密码
+  CodeMessageTData = 2;   //TData信息
+}
+
+enum TDataCode{
+  TDataCodeUnDefine = 0;
+  TDataCodeVerifyHashExist = 1;//检查数据库是否已经含有hash信息
+  TDataCodeNeedDownload = 2;   //需要根据hash信息下载种子信息
+  TDataCodeNeedHandleTorrentData = 3; //需要处理入库种子信息
+}
+
+message TData {
+  TDataCode TDataCode = 1;
+  string Hash = 2;
+  string Addr = 3;
+  bool NeedDownload = 4;
+  bytes TorrentData = 5;
+}
+
+message Verify {
+  string password = 1;
+}
+
+message Message {
+  Code code = 1;
+  TData  TData = 2;
+  Verify Verify = 3;
+}
+
+
+service RPC {
+  rpc MessageStream(stream Message) returns (stream Message){}
+}

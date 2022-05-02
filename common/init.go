@@ -27,7 +27,7 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func init() {
+func InitCommon() {
 	mongoAddr = os.Getenv("mongoAddr")
 	dataBase = os.Getenv("mongoDatabase")
 	collection = os.Getenv("mongoCollection")

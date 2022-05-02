@@ -1,8 +1,6 @@
 package common
 
 import (
-	"github.com/Bmixo/btSearch/model"
-	"github.com/Unknwon/goconfig"
 	"github.com/go-redis/redis"
 	"github.com/paulbellamy/ratecounter"
 
@@ -18,19 +16,14 @@ var (
 	tdataChanSize        = 100
 	mongoConnectLimitNum = 100
 	metadataNum          = 10
-	mongoAddr            = ""
-	wkNodes              = []string{}
+	wkNodes              []string
 	verifyPassord        = ""
 	banList              = "banList.txt"
-	mongoUsername        = ""
-	mongoPassWord        = ""
-	dataBase             = ""
-	collection           = ""
-	redisEnable          = false
-	cfg                  *goconfig.ConfigFile
-	redisAddr            = ""
-	redisPassword        = ""
-	redisDB              = 0
+
+	redisEnable   = false
+	redisAddr     = ""
+	redisPassword = ""
+	redisDB       = 0
 )
 
 var (
@@ -43,7 +36,7 @@ var (
 	cats         = [][]string{typeVideo, typeImage, typeDocument, typeMusic, typePackage, typeSoftware}
 )
 
-type file struct {
+type fileServer struct {
 	Path   []interface{} `bson:"path"`
 	Length int64         `bson:"length"`
 }
@@ -53,7 +46,7 @@ type bitTorrent struct {
 	InfoHash   string        `bson:"infohash"`
 	Name       string        `bson:"name"`
 	Extension  string        `bson:"extension"`
-	Files      []file        `bson:"files"`
+	Files      []fileServer  `bson:"files"`
 	Length     int64         `bson:"length"`
 	CreateTime int64         `bson:"create_time"`
 	LastTime   int64         `bson:"last_time"`
@@ -77,5 +70,4 @@ type Server struct {
 	blackList     []string
 	mongoLimit    chan bool
 	printChan     chan string
-	tdataChan     chan header.Tdata
 }

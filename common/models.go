@@ -33,7 +33,7 @@ type webServer struct {
 	total        int
 }
 
-type torrent struct {
+type torrentInfo struct {
 	Name        string
 	InfoHash    string
 	thunderLink string
@@ -44,7 +44,7 @@ type torrent struct {
 	Category    string
 }
 
-type file struct {
+type fileCommon struct {
 	FilePath     string
 	FileSize     float32
 	FileSizeType string

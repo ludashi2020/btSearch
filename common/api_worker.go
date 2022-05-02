@@ -3,12 +3,12 @@ package common
 import (
 	"bytes"
 	"crypto/rand"
+	"github.com/Bmixo/btSearch/api/api_server_1/torrent"
+	"github.com/Bmixo/btSearch/pkg/metawire"
+	reuse "github.com/libp2p/go-reuseport"
 	"log"
-	"strings"
-
 	randx "math/rand"
-
-	"github.com/Bmixo/btSearch/model"
+	"strings"
 
 	"encoding/binary"
 	"encoding/hex"
@@ -19,22 +19,22 @@ import (
 	"github.com/Bmixo/btSearch/pkg/bencode"
 )
 
-func (self *Worker) HandleMsg() {
+func (m *Worker) HandleMsg() {
 	for i := 0; i < 20; i++ {
-		go self.onMessage()
+		go m.onMessage()
 	}
 	for i := 0; i < 10; i++ {
 
 		go func() {
 			for {
 				buf := make([]byte, 512)
-				n, addr, err := self.udpListener.ReadFrom(buf)
+				n, addr, err := m.udpListener.ReadFrom(buf)
 				if err != nil {
-					self.printChan <- err.Error()
+					m.printChan <- err.Error()
 					continue
 				}
-				self.count[1].rate.Incr(1)
-				self.messageChan <- &message{
+				m.count[1].rate.Incr(1)
+				m.messageChan <- &message{
 					buf:  buf[:n],
 					addr: addr,
 				}
@@ -58,64 +58,64 @@ func decodeNodes(s string) (nodes []*node) {
 	return
 }
 
-func (self *Worker) AutoSendFindNode() {
+func (m *Worker) AutoSendFindNode() {
 	var one *node
 	for {
-		one = <-self.nodeChan
-		self.sendFindNode(one)
-		if len(self.kbucket) < 8 {
-			self.kbucket = append(self.kbucket, one)
+		one = <-m.nodeChan
+		m.sendFindNode(one)
+		if len(m.kbucket) < 8 {
+			m.kbucket = append(m.kbucket, one)
 		}
 	}
 }
 
-func (self *Worker) FindNode() {
+func (m *Worker) FindNode() {
 	for {
-		if self.count[4].rate.Rate() == 0 {
+		if m.count[4].rate.Rate() == 0 {
 			for _, address := range bootstapNodes {
-				self.printChan <- "send to: " + address
-				self.sendFindNode(&node{
+				m.printChan <- "send to: " + address
+				m.sendFindNode(&node{
 					addr: address,
-					id:   self.localID,
+					id:   m.localID,
 				})
 			}
 		} else {
 			time.Sleep(15 * time.Second)
 			for _, address := range bootstapNodes {
-				self.sendFindNode(&node{
+				m.sendFindNode(&node{
 					addr: address,
-					id:   self.localID,
+					id:   m.localID,
 				})
 			}
 		}
 		time.Sleep(5 * time.Second)
 	}
 }
-func (self *Worker) PrintLog() {
-	go self.timer()
+func (m *Worker) PrintLog() {
+	go m.timer()
 	for {
 		//log.Printf("\r")
-		log.Printf("%s", <-self.printChan)
+		log.Printf("%s", <-m.printChan)
 	}
 }
 
-func (self *Worker) Server() {
-	self.Tool.ToolServer(&self.Tool)
+func (m *Worker) Server() {
+	m.Tool.ToolServer(&m.Tool)
 
 }
-func (self *Worker) timer() {
+func (m *Worker) timer() {
 	for {
-		self.printChan <- "Rev: " + strconv.FormatInt(self.count[1].rate.Rate(), 10) + "r/sec" +
-			" Decode: " + strconv.FormatInt(self.count[3].rate.Rate(), 10) + "r/sec" +
-			" Suss: " + strconv.FormatInt(self.count[0].rate.Rate(), 10) + "p/sec" + " FindNode: " +
-			strconv.FormatInt(self.count[4].rate.Rate(), 10) + "p/sec" + " Drop: " +
-			strconv.FormatInt(self.count[2].rate.Rate(), 10) + "r/sec"
+		m.printChan <- "Rev: " + strconv.FormatInt(m.count[1].rate.Rate(), 10) + "r/sec" +
+			" Decode: " + strconv.FormatInt(m.count[3].rate.Rate(), 10) + "r/sec" +
+			" Suss: " + strconv.FormatInt(m.count[0].rate.Rate(), 10) + "p/sec" + " FindNode: " +
+			strconv.FormatInt(m.count[4].rate.Rate(), 10) + "p/sec" + " Drop: " +
+			strconv.FormatInt(m.count[2].rate.Rate(), 10) + "r/sec"
 		time.Sleep(time.Second * 1)
 	}
 
 }
 
-func (self *Worker) onReply(dict *map[string]interface{}, from net.Addr) {
+func (m *Worker) onReply(dict *map[string]interface{}, from net.Addr) {
 	// tid, ok := (*dict)["t"].(string)
 	// if !ok {
 	// 	return
@@ -128,88 +128,88 @@ func (self *Worker) onReply(dict *map[string]interface{}, from net.Addr) {
 	if !ok {
 		return
 	}
-	if len(self.nodeChan) < nodeChanSize {
+	if len(m.nodeChan) < nodeChanSize {
 		for _, node := range decodeNodes(nodes) {
 			if findNodeSpeedLimiter.Allow() {
-				self.nodeChan <- node
+				m.nodeChan <- node
 			}
 		}
 
 	} else {
-		self.count[2].rate.Incr(1)
+		m.count[2].rate.Incr(1)
 	}
 
 }
 
-func (self *Worker) onQuery(dict *map[string]interface{}, from net.Addr) {
+func (m *Worker) onQuery(dict *map[string]interface{}, from net.Addr) {
 	q, ok := (*dict)["q"]
 	if !ok {
-		self.printChan <- "dict q err,788990"
+		m.printChan <- "dict q err,788990"
 		return
 	}
 	switch q {
 	case pingType:
-		self.onPing(dict, from)
+		m.onPing(dict, from)
 	case findNodeType:
-		self.onFindNode(dict, from)
+		m.onFindNode(dict, from)
 	case getPeersType:
-		self.onGetPeers(*dict, from)
+		m.onGetPeers(*dict, from)
 	case announcePeerType:
-		self.onAnnouncePeer(dict, from)
+		m.onAnnouncePeer(dict, from)
 		// default:
-		// 	self.playDead(dict, from)
+		// 	m.playDead(dict, from)
 	}
 }
 
-func (self *Worker) onFindNode(dict *map[string]interface{}, from net.Addr) {
+func (m *Worker) onFindNode(dict *map[string]interface{}, from net.Addr) {
 	// c := 1
 	tid, ok := (*dict)["t"].(string)
 	if !ok {
 		return
 	}
 	d := makeReply(tid, map[string]interface{}{
-		"id":    string(randBytes(2)), //self.localID,
-		"nodes": self.nodes,
+		"id":    string(randBytes(2)), //m.localID,
+		"nodes": m.nodes,
 	})
-	self.udpListener.WriteTo(bencode.Encode(d), from)
+	m.udpListener.WriteTo(bencode.Encode(d), from)
 
 }
-func (self *Worker) onMessage() {
+func (m *Worker) onMessage() {
 	var data *message
 	for {
-		data = <-self.messageChan
+		data = <-m.messageChan
 		dict := map[string]interface{}{}
 		dict, err := bencode.Decode(bytes.NewBuffer(data.buf))
 		if err != nil {
-			// self.printChan <- ("ERR 121213:" + err.Error())
+			// m.printChan <- ("ERR 121213:" + err.Error())
 			continue
 		}
-		self.count[3].rate.Incr(1)
+		m.count[3].rate.Incr(1)
 		y, ok := dict["y"].(string)
 		if !ok {
 			continue
 		}
 		switch y {
 		case "q":
-			self.onQuery(&dict, data.addr)
+			m.onQuery(&dict, data.addr)
 		case "r": //,
-			self.onReply(&dict, data.addr)
+			m.onReply(&dict, data.addr)
 		//case "e": //处理错误不写 爬虫没必要浪费资源
 		default:
 			continue
 		}
 	}
 }
-func (self *Worker) onPing(dict *map[string]interface{}, from net.Addr) {
+func (m *Worker) onPing(dict *map[string]interface{}, from net.Addr) {
 	tid, ok := (*dict)["t"].(string)
 	if !ok {
 		return
 	}
 	d := makeReply(tid, map[string]interface{}{
-		"id": self.localID,
+		"id": m.localID,
 	})
 
-	self.udpListener.WriteTo(bencode.Encode(d), from)
+	m.udpListener.WriteTo(bencode.Encode(d), from)
 }
 func makeReply(tid string, r map[string]interface{}) map[string]interface{} {
 	dict := map[string]interface{}{
@@ -227,7 +227,7 @@ func genToken(from net.Addr) string {
 	// return string(sha1.Sum(nil))
 }
 
-func (self *Worker) onGetPeers(dict map[string]interface{}, from net.Addr) {
+func (m *Worker) onGetPeers(dict map[string]interface{}, from net.Addr) {
 
 	t, ok := dict["t"].(string)
 	if !ok {
@@ -242,16 +242,16 @@ func (self *Worker) onGetPeers(dict map[string]interface{}, from net.Addr) {
 		return
 	}
 	d := makeReply(t, map[string]interface{}{
-		"id":    string(neighborID(id, self.localID)),
-		"nodes": self.nodes,
+		"id":    string(neighborID(id, m.localID)),
+		"nodes": m.nodes,
 		"token": genToken(from),
 	})
 
-	self.udpListener.WriteTo(bencode.Encode(d), from)
+	m.udpListener.WriteTo(bencode.Encode(d), from)
 
 }
 
-func (self *Worker) onAnnouncePeer(dict *map[string]interface{}, from net.Addr) {
+func (m *Worker) onAnnouncePeer(dict *map[string]interface{}, from net.Addr) {
 	tid, ok := (*dict)["t"].(string)
 	if !ok {
 		return
@@ -284,19 +284,20 @@ func (self *Worker) onAnnouncePeer(dict *map[string]interface{}, from net.Addr) 
 		}
 	}
 	d := makeReply(tid, map[string]interface{}{
-		"id": self.localID,
+		"id": m.localID,
 	})
 
-	self.udpListener.WriteTo(bencode.Encode(d), from)
-	if len(self.Tool.ToolPostChan) == cap(self.Tool.ToolPostChan) {
-		<-self.Tool.ToolPostChan
-		self.count[2].rate.Incr(1)
+	m.udpListener.WriteTo(bencode.Encode(d), from)
+	if len(m.Tool.ToolSendChan) == cap(m.Tool.ToolSendChan) {
+		<-m.Tool.ToolSendChan
+		m.count[2].rate.Incr(1)
 	}
-	self.Tool.ToolPostChan <- header.Tdata{
-		Hash: hex.EncodeToString([]byte(infohash)),
-		Addr: from.String(),
+	m.Tool.ToolSendChan <- torrent.TData{
+		TDataCode: torrent.TDataCode_TDataCodeVerifyHashExist,
+		Hash:      hex.EncodeToString([]byte(infohash)),
+		Addr:      from.String(),
 	}
-	self.count[0].rate.Incr(1)
+	m.count[0].rate.Incr(1)
 
 }
 func generEmptyString(length int) (result string) {
@@ -333,10 +334,10 @@ func makeQuery(tid string, q string, a map[string]interface{}) map[string]interf
 	return dict
 }
 
-func (self *Worker) sendFindNode(one *node) {
-	self.count[4].rate.Incr(1)
+func (m *Worker) sendFindNode(one *node) {
+	m.count[4].rate.Incr(1)
 	msg := makeQuery(secret+one.addr[:4], "find_node", map[string]interface{}{
-		"id":     neighborID(one.id, self.localID),
+		"id":     neighborID(one.id, m.localID),
 		"target": string(randBytes(20)),
 	})
 	addr, err := net.ResolveUDPAddr("udp", one.addr)
@@ -344,7 +345,7 @@ func (self *Worker) sendFindNode(one *node) {
 		return
 	}
 	randx.Seed(time.Now().Unix())
-	self.udpListener.WriteTo(bencode.Encode(msg), addr)
+	m.udpListener.WriteTo(bencode.Encode(msg), addr)
 }
 
 func nodeToString(nodes []*node) (result string) {
@@ -359,14 +360,64 @@ func nodeToString(nodes []*node) (result string) {
 	return result
 }
 
-func (self *Worker) GenerNodes() {
+func (m *Worker) GenerNodes() {
 	for {
-		if len(self.kbucket) >= 8 {
-			self.nodes = nodeToString(self.kbucket)
-			self.kbucket = []*node{}
+		if len(m.kbucket) >= 8 {
+			m.nodes = nodeToString(m.kbucket)
+			m.kbucket = []*node{}
 			time.Sleep(time.Minute)
 		}
 		time.Sleep(5)
+	}
+}
+
+func (m *Worker) Metadata() {
+	if metadataNum < 1 {
+		m.printChan <- "metadataNum error set defalut 10"
+	}
+	nla, err := net.ResolveTCPAddr("tcp4", ":9797")
+	if err != nil {
+		panic("resolving local addr")
+	}
+	go func() {
+		for {
+			tDataTmp := <-m.Tool.ToolRevChan
+			if tDataTmp.TDataCode == torrent.TDataCode_TDataCodeNeedDownload {
+				m.tdataChan <- tDataTmp
+			}
+		}
+	}()
+	dialer := net.Dialer{Control: reuse.Control, Timeout: time.Second * 1, LocalAddr: nla}
+	for i := 0; i < metadataNum; i++ {
+		go func() {
+			for {
+				tdatax := <-m.tdataChan
+				infoHash, err := hex.DecodeString(tdatax.Hash)
+				if err != nil {
+					continue
+				}
+				peer := metawire.New(
+					string(infoHash),
+					tdatax.Addr,
+					metawire.Dialer(dialer),
+					metawire.Timeout(time.Second*1),
+					metawire.Timeout(time.Second*3),
+				)
+				data, err := peer.Fetch()
+				if err != nil {
+					m.blackAddrList.Add(tdatax.Addr)
+					continue
+				}
+				m.Tool.ToolSendChan <- torrent.TData{
+					TDataCode:   torrent.TDataCode_TDataCodeNeedHandleTorrentData,
+					TorrentData: data,
+				}
+				m.sussNum.Incr(1)
+				m.hashList.Remove(tdatax.Hash)
+				//m.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
+				continue
+			}
+		}()
 	}
 
 }

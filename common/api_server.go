@@ -4,12 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/Bmixo/btSearch/api/api_server_1/torrent"
 	"io"
 	"log"
-	"net"
 	"os"
 	"path"
 	"strconv"
@@ -17,11 +16,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/Bmixo/btSearch/model"
-	reuse "github.com/libp2p/go-reuseport"
-
 	"github.com/Bmixo/btSearch/pkg/bencode"
-	"github.com/Bmixo/btSearch/pkg/metawire"
 	"github.com/go-ego/gse"
 	"github.com/go-redis/redis"
 	mgo "gopkg.in/mgo.v2"
@@ -29,60 +24,90 @@ import (
 )
 
 func (m *Server) handleData() {
-	tdataChanCap := cap(m.tdataChan)
 	for {
-		s := <-m.Tool.ToolPostChan
+		tDataTmp := <-m.Tool.ToolRevChan
+		if tDataTmp.TDataCode == torrent.TDataCode_TDataCodeVerifyHashExist {
+			m.revNum.Incr(1)
+			infoHash := tDataTmp.Hash
 
-		m.revNum.Incr(1)
-		if m.blackAddrList.Contains(s.Addr) {
-			continue
-		}
-
-		InfoHash := s.Hash
-
-		if m.hashList.Contains(InfoHash) {
-			continue
-		}
-		select {
-		case m.mongoLimit <- true:
-		default:
-			m.dropSpeed.Incr(1)
-			continue
-		}
-		data, err := m.findHash(InfoHash)
-		if err != nil && err != mgo.ErrNotFound {
-			m.printChan <- "\n" + "ERR:4511" + err.Error() + "\n"
-			continue
-		}
-
-		if data != nil {
+			if m.hashList.Contains(infoHash) {
+				continue
+			}
 			select {
 			case m.mongoLimit <- true:
 			default:
 				m.dropSpeed.Incr(1)
 				continue
 			}
-			err = m.updateTimeHot(data["_id"].(bson.ObjectId))
-			if err != nil {
-				m.printChan <- "\n" + "update time hot ERR:0025" + err.Error() + "\n"
+			data, err := m.findHash(infoHash)
+			if err != nil && err != mgo.ErrNotFound {
+				m.printChan <- "\n" + "ERR:4511" + err.Error() + "\n"
 				continue
 			}
+
+			if data != nil {
+				select {
+				case m.mongoLimit <- true:
+				default:
+					m.dropSpeed.Incr(1)
+					continue
+				}
+				err = m.updateTimeHot(data["_id"].(bson.ObjectId))
+				if err != nil {
+					m.printChan <- "\n" + "update time hot ERR:0025" + err.Error() + "\n"
+					continue
+				}
+				continue
+			}
+			if len(m.Tool.ToolSendChan) < cap(m.Tool.ToolSendChan) {
+				tDataTmp.TDataCode = torrent.TDataCode_TDataCodeNeedDownload
+				m.Tool.ToolSendChan <- tDataTmp
+				m.hashList.Add(infoHash)
+				m.notFoundNum.Incr(1)
+			} else {
+				m.dropSpeed.Incr(1)
+			}
+		} else if tDataTmp.TDataCode == torrent.TDataCode_TDataCodeNeedHandleTorrentData {
+			torrent, err := m.newTorrent(tDataTmp.TorrentData, tDataTmp.Hash)
+			if err != nil {
+				continue
+			}
+
+			segments := m.segmenter.Segment([]byte(torrent.Name))
+			for _, j := range gse.ToSlice(segments, false) {
+				if utf8.RuneCountInString(j) < 2 || utf8.RuneCountInString(j) > 15 {
+					continue
+				} else if len(torrent.KeyWord) > 10 {
+					break
+				} else {
+					if _, error := strconv.Atoi(j); error != nil {
+						torrent.KeyWord = append(torrent.KeyWord, j)
+					}
+				}
+			}
+			select {
+			case m.mongoLimit <- true:
+			default:
+				m.dropSpeed.Incr(1)
+				continue
+			}
+			err = m.syncmongodb(torrent)
+
+			if err != nil {
+				continue
+			}
+
+			m.sussNum.Incr(1)
+			m.hashList.Remove(torrent.InfoHash)
+			//m.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
 			continue
 		}
-
-		if len(m.tdataChan) < tdataChanCap {
-			m.tdataChan <- s
-			m.hashList.Add(InfoHash)
-			m.notFoundNum.Incr(1)
-		} else {
-			m.dropSpeed.Incr(1)
-		}
-
 	}
 }
+
 func (m *Server) NewServerConn() {
 	for _, node := range wkNodes {
-		m.Tool.Links = append(m.Tool.Links, Link{Conn: nil, Addr: node, LinkPostChan: make(chan header.Tdata, 1000)})
+		m.Tool.Links = append(m.Tool.Links, Link{Conn: nil, Addr: node, LinkPostChan: make(chan torrent.TData, 1000)})
 	}
 	for i := 0; i < 10; i++ {
 		go m.handleData()
@@ -90,15 +115,15 @@ func (m *Server) NewServerConn() {
 	m.Tool.LinksServe()
 
 }
-func (m *Server) Reboot() {
 
+func (m *Server) Refresh() {
 	for {
 		time.Sleep(time.Second * 240)
 		m.blackAddrList.Clear()
 		m.hashList.Clear()
 	}
-
 }
+
 func (m *Server) PrintLog() {
 
 	for {
@@ -119,76 +144,6 @@ func (m *Server) CheckSpeed() {
 			" blackAddrList:" + strconv.Itoa(m.blackAddrList.Cardinality()) +
 			"\n"
 		time.Sleep(time.Second)
-	}
-
-}
-
-func (m *Server) Metadata() {
-	if metadataNum < 1 {
-		m.printChan <- "metadataNum error set defalut 10"
-	}
-	nla, err := net.ResolveTCPAddr("tcp4", ":9797")
-	if err != nil {
-		panic("resolving local addr")
-	}
-	dialer := net.Dialer{Control: reuse.Control, Timeout: time.Second * 1, LocalAddr: nla}
-	for i := 0; i < metadataNum; i++ {
-		go func() {
-			for {
-				tdata := <-m.tdataChan
-				infoHash, err := hex.DecodeString(tdata.Hash)
-				if err != nil {
-					continue
-				}
-
-				peer := metawire.New(
-					string(infoHash),
-					tdata.Addr,
-					metawire.Dialer(dialer),
-					metawire.Timeout(time.Second*1),
-					metawire.Timeout(time.Second*3),
-				)
-				data, err := peer.Fetch()
-				if err != nil {
-					m.blackAddrList.Add(tdata.Addr)
-					continue
-				}
-
-				torrent, err := m.newTorrent(data, tdata.Hash)
-				if err != nil {
-					continue
-				}
-
-				segments := m.segmenter.Segment([]byte(torrent.Name))
-				for _, j := range gse.ToSlice(segments, false) {
-					if utf8.RuneCountInString(j) < 2 || utf8.RuneCountInString(j) > 15 {
-						continue
-					} else if len(torrent.KeyWord) > 10 {
-						break
-					} else {
-						if _, error := strconv.Atoi(j); error != nil {
-							torrent.KeyWord = append(torrent.KeyWord, j)
-						}
-					}
-				}
-				select {
-				case m.mongoLimit <- true:
-				default:
-					m.dropSpeed.Incr(1)
-					continue
-				}
-				err = m.syncmongodb(torrent)
-
-				if err != nil {
-					continue
-				}
-
-				m.sussNum.Incr(1)
-				m.hashList.Remove(torrent.InfoHash)
-				//m.printChan <- ("------" + torrent.Name + "------" + torrent.InfoHash)
-				continue
-			}
-		}()
 	}
 
 }
@@ -227,9 +182,9 @@ func (m *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTorren
 
 	var sourceName string
 	if v, ok := info["files"]; ok {
-		var biggestFile file
+		var biggestFile fileServer
 		files := v.([]interface{})
-		bt.Files = make([]file, len(files))
+		bt.Files = make([]fileServer, len(files))
 		var TotalLength int64
 
 		bt.FileType = "Unknow"
@@ -244,7 +199,7 @@ func (m *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTorren
 				biggestFile.Length = f["length"].(int64)
 				biggestFile.Path = f["path"].([]interface{})
 			}
-			bt.Files[i] = file{
+			bt.Files[i] = fileServer{
 				Path:   f["path"].([]interface{}),
 				Length: f["length"].(int64),
 			}

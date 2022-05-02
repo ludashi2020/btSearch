@@ -15,3 +15,6 @@ worker/config/worker.conf
 /docker/server/server
 /docker/server/config/
 cmd/worker/worker
+/cmd/server/common.zip
+/cmd/worker/common.zip
+cmd/server/server

@@ -37,11 +37,11 @@ services:
       - es
       - db
 
-  worker:
-    image: bmixo/torrent-worker:1.0.1
-    ports:
-      - "65512:9898/tcp"
-      - "6999:6999/udp"
+#  worker:
+#    image: bmixo/torrent-worker:1.0.1
+#    ports:
+#      - "0.0.0.0:65512:65512"
+#      - "6999:6999/udp"
 
 #  server:
 #    image: bmixo/torrent-server:1.0.1

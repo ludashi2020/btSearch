@@ -1,10 +1,11 @@
 package common
 
 import (
+	"github.com/Bmixo/btSearch/api/api_server_1/torrent"
+	mapset "github.com/deckarep/golang-set"
 	"net"
 	"time"
 
-	"github.com/Unknwon/goconfig"
 	"github.com/paulbellamy/ratecounter"
 	"golang.org/x/time/rate"
 )
@@ -31,13 +32,13 @@ var bootstapNodes = []string{
 }
 
 var (
-	listenerAddr         = "0.0.0.0:9898"
+	//listenerAddr         = "0.0.0.0:9898"
 	findNodeSpeed        = 10000
 	nodeChanSize         = 10000
 	findNodeSpeedLimiter = rate.NewLimiter(rate.Every(time.Second/time.Duration(findNodeSpeed)), findNodeSpeed)
 	udpPort              = 6999
-	verifyPassord        = ""
-	cfg                  *goconfig.ConfigFile
+	//verifyPassord        = ""
+	//cfg                  *goconfig.ConfigFile
 )
 
 const (
@@ -67,4 +68,10 @@ type Worker struct {
 	printChan   chan string
 	messageChan chan *message
 	dataChan    chan tdata
+
+	//server
+	tdataChan     chan torrent.TData
+	blackAddrList mapset.Set
+	hashList      mapset.Set
+	sussNum       *ratecounter.RateCounter
 }
