@@ -35,7 +35,7 @@ git clone https://github.com/Bmixo/btSearch.git && cd btSearch/docker && docker-
 * 推荐配置16核心 3.8Ghz 32G内存
 ```
 apt update
-apt install curl git docker.io
+apt install curl git docker.io -y
 ```
 
 
