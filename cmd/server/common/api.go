@@ -102,7 +102,7 @@ func (m *Server) Reboot() {
 func (m *Server) PrintLog() {
 
 	for {
-		fmt.Printf("\r")
+		//fmt.Printf("\r")
 		fmt.Printf("%s", <-m.printChan)
 	}
 
@@ -112,11 +112,12 @@ func (m *Server) CheckSpeed() {
 	for {
 
 		m.printChan <- "RevSpeed: " + strconv.FormatInt(m.revNum.Rate(), 10) + "/sec" +
-					" DropSpeed: " + strconv.FormatInt(m.dropSpeed.Rate(), 10) + "/sec" +
-					" NotFoundSpeed: " + strconv.FormatInt(m.notFoundNum.Rate(), 10) + "/sec" +
-					" SussSpeed: " + strconv.FormatInt(m.sussNum.Rate(), 10) + "/sec" +
-					" HashList:" + strconv.Itoa(m.hashList.Cardinality()) +
-					" blackAddrList:" + strconv.Itoa(m.blackAddrList.Cardinality())
+			" DropSpeed: " + strconv.FormatInt(m.dropSpeed.Rate(), 10) + "/sec" +
+			" NotFoundSpeed: " + strconv.FormatInt(m.notFoundNum.Rate(), 10) + "/sec" +
+			" SussSpeed: " + strconv.FormatInt(m.sussNum.Rate(), 10) + "/sec" +
+			" HashList:" + strconv.Itoa(m.hashList.Cardinality()) +
+			" blackAddrList:" + strconv.Itoa(m.blackAddrList.Cardinality()) +
+			"\n"
 		time.Sleep(time.Second)
 	}
 

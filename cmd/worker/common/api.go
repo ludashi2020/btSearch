@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"crypto/rand"
+	"log"
 	"strings"
 
 	randx "math/rand"
@@ -11,7 +12,6 @@ import (
 
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -94,8 +94,8 @@ func (self *Worker) FindNode() {
 func (self *Worker) PrintLog() {
 	go self.timer()
 	for {
-		fmt.Printf("\r")
-		fmt.Printf("%s", <-self.printChan)
+		//log.Printf("\r")
+		log.Printf("%s", <-self.printChan)
 	}
 }
 

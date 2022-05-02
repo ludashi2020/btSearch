@@ -149,12 +149,11 @@ func (self *Tool) Communite(stream header.RPC_CommuniteServer) error {
 func (self *Tool) ToolServer(toolServer *Tool) {
 	server := grpc.NewServer()
 	header.RegisterRPCServer(server, toolServer)
-	address, err := net.Listen("tcp", listenerAddr)
+	listener, err := net.Listen("tcp", listenerAddr)
 	if err != nil {
-		log.Println("\n" + (err.Error()) + "\n")
-		return
+		log.Fatalf("failed to listen: %v", err)
 	}
-	if err := server.Serve(address); err != nil {
+	if err := server.Serve(listener); err != nil {
 		log.Println("\n" + (err.Error()) + "\n")
 		return
 	}
