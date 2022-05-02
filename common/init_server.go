@@ -1,12 +1,8 @@
 package common
 
 import (
-	"flag"
-	"github.com/Unknwon/goconfig"
-	"log"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,57 +14,22 @@ import (
 )
 
 func InitServer() {
-	confPath := flag.String("c", "server.conf", "web server config file")
 
-	flag.Parse()
-
-	config, err := goconfig.LoadConfigFile(*confPath)
-	if err != nil {
-		log.Println("Config file not exist")
-		os.Exit(-1)
-	}
-	cfg = config
-	mongoAddr, err = cfg.GetValue("mongodb", "addr")
-	checkErr(err)
-	dataBase, err = cfg.GetValue("mongodb", "database")
-	checkErr(err)
-	collection, err = cfg.GetValue("mongodb", "collection")
-	checkErr(err)
-	metadataNumTmp, err := cfg.GetValue("server", "metadataNum")
-	checkErr(err)
-	metadataNum, err = strconv.Atoi(metadataNumTmp)
-	checkErr(err)
-	mongoUsername, err = cfg.GetValue("mongodb", "musername")
-	checkErr(err)
-	mongoPassWord, err = cfg.GetValue("mongodb", "mpassword")
-	checkErr(err)
-	verifyPassord, err = cfg.GetValue("server", "verifyPassord")
-	checkErr(err)
-	tmp, err := cfg.GetValue("server", "wkNodes")
-	checkErr(err)
+	mongoAddr = os.Getenv("mongoAddr")
+	dataBase = os.Getenv("mongoDatabase")
+	collection = os.Getenv("mongoCollection")
+	mongoUsername = os.Getenv("mongoUsername")
+	mongoPassWord = os.Getenv("mongoPassWord")
+	verifyPassord = os.Getenv("verifyPassord")
+	tmp := os.Getenv("wkNodes")
 	wkNodes = strings.Split(tmp, ",")
 	for _, j := range wkNodes {
-
 		if _, _, err := net.SplitHostPort(j); err != nil {
 			panic("wkNodes set error")
 		}
 	}
-	banList, err = cfg.GetValue("server", "banList")
-	checkErr(err)
-
-	if tmp, err = cfg.GetValue("redis", "redisEnable"); tmp == "true" {
-		redisEnable = true
-		redisAddr, err = cfg.GetValue("redis", "redisAddr")
-		checkErr(err)
-		redisPassword, err = cfg.GetValue("redis", "redisPassword")
-		checkErr(err)
-		tmp, err = cfg.GetValue("redis", "redisDB")
-		checkErr(err)
-		redisDB, err = strconv.Atoi(tmp)
-		checkErr(err)
-	}
-	checkErr(err)
-
+	banList = os.Getenv("banList")
+	esURL = os.Getenv("esURL")
 }
 
 //NewSniffer :NewSniffer

@@ -99,6 +99,7 @@ func (m *Worker) FindNode() {
 		time.Sleep(5 * time.Second)
 	}
 }
+
 func (m *Worker) PrintLog() {
 	go m.timer()
 	for {

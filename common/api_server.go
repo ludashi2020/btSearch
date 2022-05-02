@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Bmixo/btSearch/api/api_server_1/torrent"
@@ -90,9 +91,34 @@ func (m *Server) handleData() {
 				m.dropSpeed.Incr(1)
 				continue
 			}
+			torrent.ID = bson.NewObjectId()
 			err = m.syncmongodb(torrent)
-
 			if err != nil {
+				continue
+			}
+			objectId := torrent.ID.Hex()
+			syncdata, err := json.Marshal(esData{
+				Title:      torrent.Name,
+				HashId:     torrent.InfoHash,
+				Length:     torrent.Length,
+				CreateTime: torrent.CreateTime,
+				FileType:   strings.ToLower(torrent.FileType),
+				Hot:        torrent.Hot,
+			})
+			err = EsPut(esURL+objectId, syncdata)
+			if err != nil && strings.Contains(err.Error(), "500") {
+				for i := 0; i < 20; i++ {
+					//es第一次运行没有初始化时候可能出错
+					err = EsPut(esURL+objectId, syncdata)
+					if err != nil && strings.Contains(err.Error(), "500") {
+						m.printChan <- fmt.Sprintln("update es error code 500,try again\n", err)
+						continue
+					}
+					break
+				}
+			}
+			if err != nil {
+				m.printChan <- fmt.Sprintln("update es error,", err)
 				continue
 			}
 

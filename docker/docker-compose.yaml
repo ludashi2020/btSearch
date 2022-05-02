@@ -6,7 +6,8 @@ services:
       - ES_JAVA_OPTS=-Xms2g -Xmx2g
     ports:
       - "9200:9200"
-
+    volumes:
+      - es-data:/usr/share/elasticsearch
   db:
     image: mongo:4.4.12
 #    environment:
@@ -16,7 +17,6 @@ services:
       - "27017:27017"
     volumes:
       - db-data:/data/db
-
 
   btsearch:
     image: bmixo/torrent-btsearch:1.0.1
@@ -37,14 +37,31 @@ services:
       - es
       - db
 
-#  worker:
-#    image: bmixo/torrent-worker:1.0.1
-#    ports:
-#      - "0.0.0.0:65512:65512"
-#      - "6999:6999/udp"
+  worker:
+    image: bmixo/torrent-worker:1.0.1
+    ports:
+      - "65512:65512"
+      - "6999:6999/udp"
+    environment:
+      listenerAddr: 0.0.0.0:65512
+      findNodeSpeed: 9999
+      nodeChanSize: 10000
+      udpPort: 6999
+      verifyPassword: 97711111
 
-#  server:
-#    image: bmixo/torrent-server:1.0.1
+  server:
+    image: bmixo/torrent-server:1.0.1
+    environment:
+      mongoAddr: db:27017
+      mongoDatabase: torrent
+      mongoCollection: torrent
+      #      mongoUsername: torrent
+      #      mongoPassWord: torrent
+      verifyPassord: 97711111
+      wkNodes: worker:65512
+      esURL: http://es:9200/bavbt/torrent/
+      banList: config/banList.txt
 
 volumes:
   db-data:
+  es-data:

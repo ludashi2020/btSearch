@@ -19,3 +19,4 @@ cmd/worker/worker
 /cmd/worker/common.zip
 cmd/server/server
 cmd/worker/main
+/torrent-web

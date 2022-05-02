@@ -5,7 +5,6 @@ RUN apt install curl inetutils-ping net-tools dnsutils wget -y
 
 WORKDIR /dist
 COPY ./worker ./worker
-COPY ./worker.conf ./worker.conf
 RUN chmod +x /dist/worker
 
 

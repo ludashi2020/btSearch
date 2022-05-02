@@ -2,49 +2,33 @@ package common
 
 import (
 	"context"
-	"flag"
 	"github.com/Bmixo/btSearch/api/api_server_1/torrent"
 	mapset "github.com/deckarep/golang-set"
-	"log"
 	"net"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/Unknwon/goconfig"
 	reuse "github.com/libp2p/go-reuseport"
 	"github.com/paulbellamy/ratecounter"
 	"golang.org/x/time/rate"
 )
 
 func InitWorker() {
-	confPath := flag.String("c", "worker.conf", "worker config file")
 
-	flag.Parse()
-
-	config, err := goconfig.LoadConfigFile(*confPath)
-	if err != nil {
-		log.Println("Config file not exist")
-		os.Exit(-1)
-	}
-	cfg = config
-	listenerAddr, err = cfg.GetValue("worker", "listenerAddr")
-	checkErr(err)
-	findNodeSpeedTmp, err := cfg.GetValue("worker", "findNodeSpeed")
-	checkErr(err)
+	listenerAddr = os.Getenv("listenerAddr")
+	findNodeSpeedTmp := os.Getenv("findNodeSpeed")
+	var err error
 	findNodeSpeed, err = strconv.Atoi(findNodeSpeedTmp)
 	checkErr(err)
 	findNodeSpeedLimiter = rate.NewLimiter(rate.Every(time.Second/time.Duration(findNodeSpeed)), findNodeSpeed)
-	nodeChanSizeTmp, err := cfg.GetValue("worker", "nodeChanSize")
-	checkErr(err)
+	nodeChanSizeTmp := os.Getenv("nodeChanSize")
 	nodeChanSize, err = strconv.Atoi(nodeChanSizeTmp)
 	checkErr(err)
-	udpPortTmp, err := cfg.GetValue("worker", "udpPort")
-	checkErr(err)
+	udpPortTmp := os.Getenv("udpPort")
 	udpPort, err = strconv.Atoi(udpPortTmp)
 	checkErr(err)
-	verifyPassord, err = cfg.GetValue("worker", "verifyPassord")
-	checkErr(err)
+	verifyPassord = os.Getenv("verifyPassword")
 
 }
 
