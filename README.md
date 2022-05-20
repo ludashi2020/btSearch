@@ -70,7 +70,7 @@ curl --user elastic:changeme -XPOST 'localhost:9200/bavbt/_open'
 - [x] 打包docker镜像
 - [ ] 提供k8s高可用部署方案（mongodb sharding + 无状态均衡负载master + etcd）
 - [ ] gin迁移iris
-
+- [x] 换用mongodb官方驱动
 
 
 
