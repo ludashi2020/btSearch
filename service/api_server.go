@@ -43,11 +43,11 @@ func (m *Server) handleData() {
 				continue
 			}
 			data, err := model.Model.Torrent.FindTorrentByHash(infoHash)
+			<-m.mongoLimit
 			if err != nil && err != mongo.ErrNoDocuments {
 				m.printChan <- "\n" + "ERR:4511" + err.Error() + "\n"
 				continue
 			}
-
 			if data != nil {
 				select {
 				case m.mongoLimit <- true:
@@ -56,6 +56,7 @@ func (m *Server) handleData() {
 					continue
 				}
 				err = model.Model.Torrent.AddTorrentHot(data.ID.Hex())
+				<-m.mongoLimit
 				if err != nil {
 					m.printChan <- "\n" + "update time hot ERR:0025" + err.Error() + "\n"
 					continue
@@ -95,6 +96,7 @@ func (m *Server) handleData() {
 			}
 			torrent.ID = primitive.NewObjectID()
 			err = model.Model.Torrent.InsertTorrent(torrent)
+			<-m.mongoLimit
 			if err != nil {
 				continue
 			}
