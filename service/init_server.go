@@ -28,6 +28,7 @@ func InitServer() {
 	esUrlBase = os.Getenv("esUrlBase")
 	esUsername = os.Getenv("esUsername")
 	esPassWord = os.Getenv("esPassWord")
+	InitEs()
 }
 
 func InitEs() {
@@ -58,7 +59,6 @@ func InitEs() {
 
 //NewSniffer :NewSniffer
 func NewSniffer() *Server {
-	InitEs()
 	var redisClient *redis.Client
 	{
 		if redisEnable {
