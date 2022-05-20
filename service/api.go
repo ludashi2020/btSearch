@@ -1,4 +1,4 @@
-package common
+package service
 
 import (
 	"bytes"
@@ -7,12 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Bmixo/btSearch/model"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/buger/jsonparser"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/flosch/pongo2"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -23,7 +23,7 @@ import (
 
 func (server *webServer) Timer() {
 	for {
-		total, err := server.getStatus()
+		total, err := model.Model.Torrent.GetStatus()
 		if err != nil {
 			continue
 		}
@@ -362,52 +362,44 @@ func (server *webServer) Index(c *gin.Context) {
 
 func (server *webServer) Details(c *gin.Context) {
 
-	objectid := strings.Replace(c.Param("objectid"), ".html", "", -1)
+	objectId := strings.Replace(c.Param("objectid"), ".html", "", -1)
 	loc := locVerify(c.DefaultQuery("loc", ""), c.Request.Header.Get("Accept-Language"))
 
-	if len(objectid) == 24 {
-		torrentData, err := server.find(objectid)
+	if len(objectId) == 24 {
+		torrentData, err := model.Model.Torrent.FindTorrent(objectId)
 		if err != nil {
 			c.HTML(http.StatusNotFound, "404.html", pongo2.Context{})
 		} else {
 
 			var tmKeyword []string
-			for _, keyword := range torrentData["key_word"].([]interface{}) {
-				tmKeyword = append(tmKeyword, keyword.(string))
+			for _, keyword := range torrentData.KeyWord {
+				tmKeyword = append(tmKeyword, keyword)
 			}
 
 			var files []fileCommon
 			var filenum int
 
-			for _, one := range torrentData["files"].([]interface{}) {
+			for _, one := range torrentData.Files {
 
 				var fileTmp fileCommon
 				var ignore bool
 
-				for i, path := range one.(map[string]interface{})["path"].([]interface{}) {
+				for i, path := range one.Path {
 
-					if strings.Contains(path.(string), "如果您看到此文件，请升级到BitComet(比特彗星)0.85或以上版本") {
+					if strings.Contains(path, "如果您看到此文件，请升级到BitComet(比特彗星)0.85或以上版本") {
 						ignore = true
 						continue
 					}
 
 					if i == 0 {
-						fileTmp.FilePath = path.(string)
+						fileTmp.FilePath = path
 
 					} else {
 
-						fileTmp.FilePath = fileTmp.FilePath + "/" + path.(string)
+						fileTmp.FilePath = fileTmp.FilePath + "/" + path
 					}
 
-					var length int64
-
-					if lens, ok := one.(map[string]interface{})["length"].(int); ok {
-						length = int64(lens)
-					} else {
-						length = one.(map[string]interface{})["length"].(int64)
-					}
-
-					fileTmp.FileSize, fileTmp.FileSizeType = getsize(length)
+					fileTmp.FileSize, fileTmp.FileSizeType = getsize(one.Length)
 					filenum = filenum + 1
 				}
 
@@ -417,24 +409,24 @@ func (server *webServer) Details(c *gin.Context) {
 
 			}
 
-			totalLengh, lengthType := getsize(torrentData["length"].(int64))
+			totalLengh, lengthType := getsize(torrentData.Length)
 
-			infohash := torrentData["infohash"].(string)
-			name := torrentData["name"].(string)
+			infohash := torrentData.InfoHash
+			name := torrentData.Name
 			c.HTML(http.StatusOK, "details.html", pongo2.Context{
 				"Name":            name,
 				"Infohash":        infohash,
 				"thunderLink":     magnet2Thunder("magnet:?xt=urn:btih:" + infohash + "&dn=" + name),
-				"Hot":             torrentData["hot"].(int),
-				"CreateTime":      time.Unix(torrentData["create_time"].(int64), 0).Format("2006-01-02"),
-				"LastTime":        time.Unix(torrentData["last_time"].(int64), 0).Format("2006-01-02"),
+				"Hot":             torrentData.Hot,
+				"CreateTime":      time.Unix(torrentData.CreateTime, 0).Format("2006-01-02"),
+				"LastTime":        time.Unix(torrentData.LastTime, 0).Format("2006-01-02"),
 				"TotalLength":     totalLengh,
 				"TotalLengthType": lengthType,
 				"FileNum":         filenum,
 				"Files":           files,
 				"Tag":             tmKeyword,
 				"loc":             loc,
-				"Category":        torrentData["category"].(string),
+				"Category":        torrentData.Category,
 			})
 
 		}
@@ -444,47 +436,25 @@ func (server *webServer) Details(c *gin.Context) {
 	}
 }
 
-func (server *webServer) find(id string) (data map[string]interface{}, err error) {
-	for _, j := range id {
-		if !((48 <= j && j <= 57) || (65 <= j && j <= 90) || (97 <= j && j <= 122)) {
-			return nil, errors.New("database inject")
-		}
-	}
+//func (server *webServer) find(id string) (data map[string]interface{}, err error) {
+//	for _, j := range id {
+//		if !((48 <= j && j <= 57) || (65 <= j && j <= 90) || (97 <= j && j <= 122)) {
+//			return nil, errors.New("database inject")
+//		}
+//	}
+//
+//	session := server.mon.Clone()
+//	c := session.DB(config.Config.MongoDatabase.Database).C(config.Config.MongoDatabase.Collection)
+//	selector := bson.M{"_id": bson.ObjectIdHex(id)}
+//	//data := bson.M{"hot": 100}
+//	err = c.Find(selector).One(&data)
+//	if err != nil {
+//		return nil, errors.New("mongodb find error")
+//	}
+//	session.Close()
+//	return
+//}
 
-	session := server.mon.Clone()
-	c := session.DB(dataBase).C(collection)
-	selector := bson.M{"_id": bson.ObjectIdHex(id)}
-	//data := bson.M{"hot": 100}
-	err = c.Find(selector).One(&data)
-	if err != nil {
-		return nil, errors.New("Mongodb Find ERROR")
-	}
-	session.Close()
-	return
-}
-
-func get(url string, indata []byte) (data []byte, err error) {
-	client := &http.Client{}
-
-	post := bytes.NewBuffer(indata)
-	req, err := http.NewRequest("GET", url, post)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	req.SetBasicAuth(esUsername, esPassWord)
-
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return []byte{}, err
-	}
-	defer resp.Body.Close()
-
-	data, err = ioutil.ReadAll(resp.Body)
-	return data, err
-}
 func getsize(i int64) (float32, string) {
 
 	if i >= 1073741824 {
@@ -498,30 +468,6 @@ func getsize(i int64) (float32, string) {
 	}
 
 }
-
-// func hotWords() (words []string, err error) {
-// 	rev, err := http.Get("https://movie.douban.com/j/search_subjects?type=movie&tag=%E7%83%AD%E9%97%A8&sort=recommend&page_limit=20&page_start=0")
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rev.Body.Close()
-
-// 	body, err := ioutil.ReadAll(rev.Body)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	data := map[string]interface{}{}
-// 	err = json.Unmarshal(body, &data)
-
-// 	for _, hotWord := range data["subjects"].([]interface{}) {
-
-// 		words = append(words, hotWord.(map[string]interface{})["title"].(string))
-
-// 	}
-// 	return
-
-// }
 
 func dbSpider(n int) (result []mvData, err error) {
 	rev, err := http.Get("https://movie.douban.com/j/search_subjects?type=movie&tag=%E7%83%AD%E9%97%A8&sort=recommend&page_limit=20&page_start=" + strconv.Itoa(n))
@@ -660,75 +606,6 @@ func fixHotWord(hotword string) (words string) {
 
 }
 
-// func (server *webServer) getHotWord() (words []string) {
-// 	session := server.mon.Clone()
-// 	c := session.DB(dataBase).C("etc")
-// 	selector := bson.M{"tablename": "HotWords"}
-// 	var m map[string]interface{}
-
-// 	err := c.Find(selector).One(&m)
-// 	if err != nil {
-// 		return []string{}
-// 	}
-// 	total := 0
-// 	for _, j := range m["hotwords"].([]interface{}) {
-
-// 		word := j.(string)
-// 		total = total + len([]rune(word))
-// 		if total > 50 {
-// 			break
-// 		}
-// 		words = append(words, word)
-// 	}
-// 	return
-
-// }
-// func (server *webServer) updateHotWords() {
-
-// 	for {
-// 		hotwords, err := hotWords()
-// 		if err != nil {
-// 			continue
-// 		}
-// 		server.hotWords = hotwords
-// 		time.Sleep(time.Hour)
-
-// 	}
-// }
-
-// func (server *webServer) updateHotWords() {
-// 	selector := bson.M{"tablename": "HotWords"}
-// 	for {
-// 		session := server.mon.Clone()
-// 		c := session.DB(dataBase).C("etc")
-
-// 		var m map[string]interface{}
-
-// 		err := c.Find(selector).One(&m)
-// 		if err == mgo.ErrNotFound {
-// 			var words hotWordsJSON
-// 			words.TableName = "HotWords"
-// 			words.HotWords, err = hotWords()
-// 			fmt.Println("Create collection: hotWords")
-// 			c.Insert(words)
-
-// 		} else if err != nil {
-// 			fmt.Println(err, "1232311")
-// 			session.Close()
-// 			continue
-// 		} else {
-// 			m["hotwords"], err = hotWords()
-// 			if err != nil {
-// 				session.Close()
-// 				continue
-// 			}
-// 			fmt.Println("Update Hot Words")
-// 			c.Update(selector, m)
-// 		}
-// 		session.Close()
-// 		time.Sleep(time.Hour)
-// 	}
-// }
 func (server *webServer) syncHotSearch() (result []mvData) {
 	server.hotSearchSet.Clear()
 
@@ -759,7 +636,7 @@ func (server *webServer) syncHotSearch() (result []mvData) {
 	}
 }
 func (server *webServer) SyncDbHotSearchTimer() {
-
+	return
 	for {
 		data := server.syncHotSearch()
 		server.hotSearch = []hotSearchData{}
@@ -778,16 +655,6 @@ func (server *webServer) SyncDbHotSearchTimer() {
 		fmt.Println("Collect MvInfo Suss.......")
 		time.Sleep(2 * time.Hour)
 	}
-
-}
-func (server *webServer) getStatus() (result int, err error) {
-	session := server.mon.Clone()
-	data := bson.M{}
-	if err := session.DB(dataBase).Run("dbstats", &data); err != nil {
-		return 0, errors.New("Mongodb ERR")
-	}
-	session.Close()
-	return data["objects"].(int), nil
 
 }
 

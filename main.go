@@ -1,16 +1,19 @@
 package main
 
 import (
-	"runtime"
-
 	"github.com/Bmixo/btSearch/common"
+	"github.com/Bmixo/btSearch/model"
+	"github.com/Bmixo/btSearch/service"
 	"github.com/flosch/pongo2"
+	"runtime"
 )
 
 func main() {
-	common.InitCommon()
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	server := common.NewServer()
+	common.Init()
+	model.Init()
+	service.Init()
+	server := service.NewServer()
 	pongo2.RegisterFilter("locFilter", server.FilterAddLoc)
 	pongo2.RegisterFilter("keyFilter", server.FilterGetdbDataValueByKey)
 	server.Router.GET("/search", server.Search)
@@ -22,6 +25,6 @@ func main() {
 	go server.Timer()
 	go server.SyncDbHotSearchTimer()
 
-	server.Router.Run(common.WebServerAddr)
+	server.Router.Run(service.WebServerAddr)
 
 }

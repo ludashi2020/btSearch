@@ -1,4 +1,4 @@
-package common
+package service
 
 import (
 	"github.com/Bmixo/btSearch/api/api_server_1/torrent"

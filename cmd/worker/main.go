@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/Bmixo/btSearch/common"
+	"github.com/Bmixo/btSearch/service"
 )
 
 func main() {
-	common.InitWorker()
-	m := common.NewWorkerServer()
+	service.InitWorker()
+	m := service.NewWorkerServer()
 	go m.PrintLog()
 	go m.FindNode()
 	go m.GenerNodes()

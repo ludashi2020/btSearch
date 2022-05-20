@@ -1,4 +1,4 @@
-package common
+package service
 
 import (
 	"github.com/elastic/go-elasticsearch/v6"
@@ -12,16 +12,9 @@ import (
 	"github.com/go-ego/gse"
 	"github.com/go-redis/redis"
 	"github.com/paulbellamy/ratecounter"
-	mgo "gopkg.in/mgo.v2"
 )
 
 func InitServer() {
-
-	mongoAddr = os.Getenv("mongoAddr")
-	dataBase = os.Getenv("mongoDatabase")
-	collection = os.Getenv("mongoCollection")
-	mongoUsername = os.Getenv("mongoUsername")
-	mongoPassWord = os.Getenv("mongoPassWord")
 	verifyPassord = os.Getenv("verifyPassord")
 	tmp := os.Getenv("wkNodes")
 	wkNodes = strings.Split(tmp, ",")
@@ -37,8 +30,7 @@ func InitServer() {
 	esPassWord = os.Getenv("esPassWord")
 }
 
-//NewSniffer :NewSniffer
-func NewSniffer() *Server {
+func InitEs() {
 	for {
 		time.Sleep(time.Second)
 		log.Println("trying to connect es")
@@ -62,33 +54,24 @@ func NewSniffer() *Server {
 		log.Println(res)
 		break
 	}
-	dialInfo := &mgo.DialInfo{
-		Addrs:  []string{mongoAddr},
-		Direct: false,
-		//Timeout: time.Second * 1,
-		Database:  dataBase,
-		Source:    collection,
-		Username:  mongoUsername,
-		Password:  mongoPassWord,
-		PoolLimit: 4096, // Session.SetPoolLimit
-	}
+}
 
-	session, err := mgo.DialWithInfo(dialInfo)
-	session.SetPoolLimit(mongoConnectLimitNum)
-	session.SetMode(mgo.Monotonic, true)
-	if err != nil {
-		panic(err.Error)
-	}
+//NewSniffer :NewSniffer
+func NewSniffer() *Server {
+	//TODO
+	//InitEs()
 	var redisClient *redis.Client
-	if redisEnable {
-		redisClient = redis.NewClient(&redis.Options{
-			Addr:     redisAddr,
-			Password: redisPassword,
-			DB:       redisDB,
-		})
-		_, err := redisClient.Ping().Result()
-		if err != nil {
-			panic(err.Error())
+	{
+		if redisEnable {
+			redisClient = redis.NewClient(&redis.Options{
+				Addr:     redisAddr,
+				Password: redisPassword,
+				DB:       redisDB,
+			})
+			_, err := redisClient.Ping().Result()
+			if err != nil {
+				panic(err.Error())
+			}
 		}
 	}
 
@@ -101,7 +84,6 @@ func NewSniffer() *Server {
 		hashList:    mapset.NewSet(),
 		Tool:        *NewTool(),
 		Nodes:       wkNodes,
-		Mon:         session,
 		RedisClient: redisClient,
 		mongoLimit:  make(chan bool, mongoConnectLimitNum),
 		blackList:   loadBlackList(),

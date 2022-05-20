@@ -2,15 +2,18 @@ package main
 
 import (
 	"github.com/Bmixo/btSearch/common"
+	"github.com/Bmixo/btSearch/model"
+	"github.com/Bmixo/btSearch/service"
 	"net/http"
 	_ "net/http/pprof"
 )
 
 func main() {
-	common.InitServer()
+	common.Init()
+	model.Init()
+	service.InitServer()
 	go http.ListenAndServe("0.0.0.0:6060", nil)
-	self := common.NewSniffer()
-	defer self.Mon.Close()
+	self := service.NewSniffer()
 	go self.PrintLog()
 	go self.NewServerConn()
 	go self.Refresh()

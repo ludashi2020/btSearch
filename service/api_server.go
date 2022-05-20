@@ -1,4 +1,4 @@
-package common
+package service
 
 import (
 	"bufio"
@@ -8,6 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Bmixo/btSearch/api/api_server_1/torrent"
+	"github.com/Bmixo/btSearch/model"
+	tt "github.com/Bmixo/btSearch/model/torrent"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+
 	"io"
 	"log"
 	"os"
@@ -19,9 +24,6 @@ import (
 
 	"github.com/Bmixo/btSearch/pkg/bencode"
 	"github.com/go-ego/gse"
-	"github.com/go-redis/redis"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 func (m *Server) handleData() {
@@ -40,8 +42,8 @@ func (m *Server) handleData() {
 				m.dropSpeed.Incr(1)
 				continue
 			}
-			data, err := m.findHash(infoHash)
-			if err != nil && err != mgo.ErrNotFound {
+			data, err := model.Model.Torrent.FindTorrentByHash(infoHash)
+			if err != nil && err != mongo.ErrNoDocuments {
 				m.printChan <- "\n" + "ERR:4511" + err.Error() + "\n"
 				continue
 			}
@@ -53,7 +55,7 @@ func (m *Server) handleData() {
 					m.dropSpeed.Incr(1)
 					continue
 				}
-				err = m.updateTimeHot(data["_id"].(bson.ObjectId))
+				err = model.Model.Torrent.AddTorrentHot(data.ID.Hex())
 				if err != nil {
 					m.printChan <- "\n" + "update time hot ERR:0025" + err.Error() + "\n"
 					continue
@@ -91,8 +93,8 @@ func (m *Server) handleData() {
 				m.dropSpeed.Incr(1)
 				continue
 			}
-			torrent.ID = bson.NewObjectId()
-			err = m.syncmongodb(torrent)
+			torrent.ID = primitive.NewObjectID()
+			err = model.Model.Torrent.InsertTorrent(torrent)
 			if err != nil {
 				continue
 			}
@@ -175,32 +177,32 @@ func (m *Server) CheckSpeed() {
 
 }
 
-func (m *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTorrent, err error) {
+func (m *Server) newTorrent(metadata []byte, InfoHash string) (torrent tt.BitTorrent, err error) {
 	info, err := bencode.Decode(bytes.NewBuffer(metadata))
 	if err != nil {
-		return bitTorrent{}, err
+		return tt.BitTorrent{}, err
 	}
 	timestamp := time.Now().Unix()
 	if _, ok := info["name"]; !ok {
-		return bitTorrent{}, errors.New("Metadata Name is Empty")
+		return tt.BitTorrent{}, errors.New("Metadata Name is Empty")
 	}
 	if t, ok := info["name"].(string); ok {
 		if !utf8.Valid([]byte(t)) {
-			return bitTorrent{}, errors.New("Metadata Name is not Encode by utf-8")
+			return tt.BitTorrent{}, errors.New("Metadata Name is not Encode by utf-8")
 		}
 	} else {
-		return bitTorrent{}, errors.New("interface conversion: interface {} is int64, not string,90099")
+		return tt.BitTorrent{}, errors.New("interface conversion: interface {} is int64, not string,90099")
 	}
 
 	for _, black := range m.blackList {
 		if strings.Contains(info["name"].(string), black) {
 
-			return bitTorrent{}, errors.New("Metadata Name is in Blacklist")
+			return tt.BitTorrent{}, errors.New("Metadata Name is in Blacklist")
 		}
 	}
 
-	bt := bitTorrent{
-		ID:         bson.NewObjectId(),
+	bt := tt.BitTorrent{
+		ID:         primitive.NewObjectID(),
 		InfoHash:   InfoHash,
 		Name:       info["name"].(string),
 		CreateTime: timestamp,
@@ -209,9 +211,9 @@ func (m *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTorren
 
 	var sourceName string
 	if v, ok := info["files"]; ok {
-		var biggestFile fileServer
+		var biggestFile tt.FileServer
 		files := v.([]interface{})
-		bt.Files = make([]fileServer, len(files))
+		bt.Files = make([]tt.FileServer, len(files))
 		var TotalLength int64
 
 		bt.FileType = "Unknow"
@@ -219,14 +221,14 @@ func (m *Server) newTorrent(metadata []byte, InfoHash string) (torrent bitTorren
 			f := item.(map[string]interface{})
 
 			if _, ok := f["length"].(int64); !ok {
-				return bitTorrent{}, errors.New("length, not int64")
+				return tt.BitTorrent{}, errors.New("length, not int64")
 			}
 			TotalLength = TotalLength + f["length"].(int64)
 			if f["length"].(int64) > biggestFile.Length {
 				biggestFile.Length = f["length"].(int64)
 				biggestFile.Path = f["path"].([]interface{})
 			}
-			bt.Files[i] = fileServer{
+			bt.Files[i] = tt.FileServer{
 				Path:   f["path"].([]interface{}),
 				Length: f["length"].(int64),
 			}
@@ -271,55 +273,6 @@ findName:
 
 	return bt, nil
 
-}
-
-func (m *Server) findHash(infoHash string) (result map[string]interface{}, err error) {
-	if redisEnable {
-		val, redisErr := m.RedisClient.Get(infoHash).Result()
-		if redisErr == redis.Nil {
-			c := m.Mon.DB(dataBase).C(collection)
-			selector := bson.M{"infohash": infoHash}
-			err = c.Find(selector).One(&result)
-			if result != nil {
-				m.RedisClient.Set(infoHash, result["_id"].(bson.ObjectId), 0)
-			}
-			return
-		} else if redisErr != nil {
-			c := m.Mon.DB(dataBase).C(collection)
-			selector := bson.M{"infohash": infoHash}
-			err = c.Find(selector).One(&result)
-		} else {
-			result["_id"] = bson.ObjectId(val)
-		}
-	} else {
-		c := m.Mon.DB(dataBase).C(collection)
-		selector := bson.M{"infohash": infoHash}
-		err = c.Find(selector).One(&result)
-	}
-	<-m.mongoLimit
-	return
-}
-
-func (m *Server) syncmongodb(data bitTorrent) (err error) {
-
-	c := m.Mon.DB(dataBase).C(collection)
-	err = c.Insert(data)
-	<-m.mongoLimit
-	return
-}
-
-func (m *Server) updateTimeHot(objectID bson.ObjectId) (err error) {
-
-	c := m.Mon.DB(dataBase).C(collection)
-
-	data := make(map[string]interface{})
-	data["$inc"] = map[string]int{"hot": 1}
-	data["$set"] = map[string]int64{"last_time": time.Now().Unix()}
-
-	selector := bson.M{"_id": objectID}
-	err = c.Update(selector, data)
-	<-m.mongoLimit
-	return
 }
 
 func loadBlackList() (blackList []string) {

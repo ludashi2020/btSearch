@@ -1,4 +1,4 @@
-package common
+package service
 
 import (
 	"github.com/go-redis/redis"
@@ -7,8 +7,6 @@ import (
 	mapset "github.com/deckarep/golang-set"
 
 	"github.com/go-ego/gse"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 var (
@@ -36,32 +34,12 @@ var (
 	cats         = [][]string{typeVideo, typeImage, typeDocument, typeMusic, typePackage, typeSoftware}
 )
 
-type fileServer struct {
-	Path   []interface{} `bson:"path"`
-	Length int64         `bson:"length"`
-}
-
-type bitTorrent struct {
-	ID         bson.ObjectId `bson:"_id"`
-	InfoHash   string        `bson:"infohash"`
-	Name       string        `bson:"name"`
-	Extension  string        `bson:"extension"`
-	Files      []fileServer  `bson:"files"`
-	Length     int64         `bson:"length"`
-	CreateTime int64         `bson:"create_time"`
-	LastTime   int64         `bson:"last_time"`
-	Hot        int           `bson:"hot"`
-	FileType   string        `bson:"category"`
-	KeyWord    []string      `bson:"key_word"`
-}
 type Server struct {
 	segmenter   gse.Segmenter
 	hashList    mapset.Set
 	Nodes       []string
 	Tool        Tool
-	Mon         *mgo.Session
 	RedisClient *redis.Client
-	collection  *mgo.Collection
 	revNum      *ratecounter.RateCounter
 	dropSpeed   *ratecounter.RateCounter
 	sussNum     *ratecounter.RateCounter

@@ -25,11 +25,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      mongoAddr: db:27017
+      MongoDatabaseAddr: "mongodb://root@127.0.0.1:27017/torrent?authSource=admin"
       mongoDatabase: torrent
       mongoCollection: torrent
-      #      mongoUsername: torrent
-      #      mongoPassWord: torrent
       esUsername: elastic
       esPassWord: changeme
       esURL: http://es:9200/bavbt/torrent/
@@ -57,11 +55,9 @@ services:
     image: bmixo/torrent-server:1.0.1
     restart: always
     environment:
-      mongoAddr: db:27017
+      MongoDatabaseAddr: "mongodb://root@127.0.0.1:27017/torrent?authSource=admin"
       mongoDatabase: torrent
       mongoCollection: torrent
-      #      mongoUsername: torrent
-      #      mongoPassWord: torrent
       esUsername: elastic
       esPassWord: changeme
       esUrlBase: http://es:9200

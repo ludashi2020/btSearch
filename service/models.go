@@ -1,10 +1,9 @@
-package common
+package service
 
 import (
 	"github.com/Unknwon/goconfig"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/gin-gonic/gin"
-	mgo "gopkg.in/mgo.v2"
 )
 
 type dbData struct {
@@ -26,11 +25,10 @@ type hotSearchData struct {
 }
 
 type webServer struct {
-	mon          *mgo.Session
 	Router       *gin.Engine
 	hotSearchSet mapset.Set
 	hotSearch    []hotSearchData
-	total        int
+	total        int64
 }
 
 type torrentInfo struct {
@@ -51,16 +49,11 @@ type fileCommon struct {
 }
 
 var (
-	mongoAddr            = ""
-	mongoUsername        = ""
-	mongoPassWord        = ""
 	esUsername           = ""
 	esPassWord           = ""
 	hotSearchOnePageSize = 6
 	hotSearchPageSize    = 3
-	dataBase             = ""
 	authDataBase         = ""
-	collection           = ""
 	esURL                = ""
 	esUrlBase            = ""
 	WebServerAddr        = ""
