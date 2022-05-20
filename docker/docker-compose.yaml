@@ -1,7 +1,7 @@
 version: "3"
 services:
   es:
-    image: bmixo/torrent-es:1.0.1
+    image: bmixo/torrent-es:1.0.2
     restart: always
     environment:
       - ES_JAVA_OPTS=-Xms2g -Xmx2g
@@ -20,7 +20,7 @@ services:
       - db-data:/data/db
 
   btsearch:
-    image: bmixo/torrent-btsearch:1.0.1
+    image: bmixo/torrent-btsearch:1.0.2
     restart: always
     ports:
       - "8080:8080"
@@ -38,7 +38,7 @@ services:
       - db
 
   worker:
-    image: bmixo/torrent-worker:1.0.1
+    image: bmixo/torrent-worker:1.0.2
     restart: always
     ports:
       - "65512:65512"
@@ -52,7 +52,7 @@ services:
       disableLog: 'false'
 
   server:
-    image: bmixo/torrent-server:1.0.1
+    image: bmixo/torrent-server:1.0.2
     restart: always
     environment:
       MongoDatabaseAddr: "mongodb://root@db:27017/torrent?authSource=admin"

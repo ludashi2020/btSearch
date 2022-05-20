@@ -58,8 +58,7 @@ func InitEs() {
 
 //NewSniffer :NewSniffer
 func NewSniffer() *Server {
-	//TODO
-	//InitEs()
+	InitEs()
 	var redisClient *redis.Client
 	{
 		if redisEnable {

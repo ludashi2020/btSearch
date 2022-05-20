@@ -30,8 +30,7 @@ func Init() {
 	esURL = os.Getenv("esURL")
 	WebServerAddr = os.Getenv("webServerAddr")
 	esUrlBase = os.Getenv("esUrlBase")
-	//TODO
-	//InitEs()
+	InitEs()
 }
 
 func NewServer() *webServer {
