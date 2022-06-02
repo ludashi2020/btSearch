@@ -2,7 +2,7 @@
 <p align="center">
   <a href="https://pkg.go.dev/github.com/Bmixo/btSearch"><img src="https://pkg.go.dev/badge/github.com/Bmixo/btSearch" alt="PkgGoDev"></a>
   <a href="https://goreportcard.com/report/github.com/Bmixo/btSearch"><img src="https://goreportcard.com/badge/github.com/Bmixo/btSearch" alt="Go Report Card"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache-green.svg" alt="License: MIT"></a>
+  <a href="https://github.com/Bmixo/btSearch"><img src="https://img.shields.io/badge/License-Apache-green.svg" alt="License: Apache"></a>
 </p>
 <br>
 ## 1.页面展示
