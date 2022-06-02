@@ -1,5 +1,10 @@
 # btSearch 一个用go语言实现的磁力搜索网站
-
+<p align="center">
+  <a href="https://pkg.go.dev/github.com/Bmixo/btSearch"><img src="https://pkg.go.dev/badge/github.com/Bmixo/btSearch" alt="PkgGoDev"></a>
+  <a href="https://goreportcard.com/report/github.com/Bmixo/btSearch"><img src="https://goreportcard.com/badge/github.com/Bmixo/btSearch" alt="Go Report Card"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache-green.svg" alt="License: MIT"></a>
+</p>
+<br>
 ## 1.页面展示
 
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index_old.png)
