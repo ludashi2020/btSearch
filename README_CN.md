@@ -6,6 +6,16 @@
 </p>
 <br>
 
+<div align="center">
+<strong>
+<samp>
+
+[English](README.md) · [简体中文](README_CN.md)
+
+</samp>
+</strong>
+</div>
+
 ## 1.页面展示
 
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index_old.png)
