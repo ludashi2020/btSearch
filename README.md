@@ -87,6 +87,7 @@ curl --user elastic:changeme -XPOST 'localhost:9200/bavbt/_open'
 - [ ] Provide k8s high availability deployment solution (mongodb sharding + stateless load balancing master + etcd)
 - [ ] gin migrate to iris
 - [x] Switch to the official mongodb driver
+- [ ] support postgres and mysql
 
 
 
