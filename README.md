@@ -16,7 +16,7 @@
 </strong>
 </div>
 
-## 1.Web
+## 1.Web Interface
 
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index_old.png)
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index.PNG)
