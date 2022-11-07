@@ -16,7 +16,7 @@
 </strong>
 </div>
 
-## 1.Display
+## 1.Web
 
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index_old.png)
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/index.PNG)
