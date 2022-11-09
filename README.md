@@ -38,7 +38,7 @@ Tool   |  tools
 
 2.The docker one-click installation is only for development testing and demonstration program functions, and should not be used in the production environment.
 
-3.To use this program in production environment, the author assumes that all users will use Golang, please Fork any version of the master branch code for development, and do not merge the subsequent main branch code. The master branch code does not guarantee that incompatible changes will not be made.
+3.To use this program in production environment, the author assumes that all users know how to use Golang, please Fork any version of the master branch code for development, and do not merge the subsequent master branch code. The master branch code does not guarantee that incompatible changes will not be made.
 
 ## Installation (docker one-click installation)：
 ```
