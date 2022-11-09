@@ -48,7 +48,7 @@ git clone https://github.com/Bmixo/btSearch.git && cd btSearch/docker && docker-
 
 ## 依赖环境 
 * 确保运行程序的服务器能被互联网外部主机访问到
-* 推荐配置16核心 3.8Ghz 32G内存
+* 推荐配置 8核心 3.8Ghz 32G内存
 ```
 apt update
 apt install curl git docker.io -y
