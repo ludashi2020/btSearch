@@ -46,9 +46,23 @@ git clone https://github.com/Bmixo/btSearch.git && cd btSearch/docker && docker-
 ```
 After waiting for a while for the system to initialize, start collecting data. The program web interface is available at http://127.0.0.1:8080
 
-## Dependent environment
+## Recommended hardware
 * Make sure the server running the program is reachable by hosts outside the Internet
-* Recommended server hardware configuration: 16 cores 3.8Ghz 32G memory
+* Recommended hardware configuration for single server installation: 16 cores 3.8Ghz 32G memory
+* Recommended hardware configuration for k8s HA installation:
+```
+torrent-es-01: 16 cores 3.8Ghz 32G memory
+torrent-es-02: 16 cores 3.8Ghz 32G memory
+torrent-es-03: 16 cores 3.8Ghz 32G memory
+worker-01: 8 cores 2Ghz 1G memory
+worker-02: 8 cores 2Ghz 1G memory
+worker-03: 8 cores 2Ghz 1G memory
+btsearch-01: 16 cores 3.8Ghz 32G memory
+btsearch-02: 16 cores 3.8Ghz 32G memory
+server:  16 cores 3.8Ghz 32G memory
+```
+
+## Dependencies Install: 
 ```
 apt update
 apt install curl git docker.io -y
