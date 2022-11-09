@@ -51,9 +51,9 @@ After waiting for a while for the system to initialize, start collecting data. T
 * Recommended hardware configuration for single server installation: 16 cores 3.8Ghz 32G memory
 * Recommended hardware configuration for k8s HA installation:
 ```
-torrent-es-01: 16 cores 3.8Ghz 32G memory
-torrent-es-02: 16 cores 3.8Ghz 32G memory
-torrent-es-03: 16 cores 3.8Ghz 32G memory
+torrent-es-cluster-01: 16 cores 3.8Ghz 32G memory
+torrent-es-cluster-02: 16 cores 3.8Ghz 32G memory
+torrent-es-cluster-03: 16 cores 3.8Ghz 32G memory
 worker-01: 8 cores 2Ghz 1G memory
 worker-02: 8 cores 2Ghz 1G memory
 worker-03: 8 cores 2Ghz 1G memory
