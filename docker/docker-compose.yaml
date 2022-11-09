@@ -60,7 +60,7 @@ services:
       mongoCollection: torrent
       EsUsername: elastic
       EsPassWord: changeme
-      EnableElasticsearch: true
+      EnableElasticsearch: "true"
       EsUrlBase: http://es:9200
       verifyPassord: 97711111
       wkNodes: worker:65512
