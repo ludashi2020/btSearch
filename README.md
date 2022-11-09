@@ -46,7 +46,7 @@ git clone https://github.com/Bmixo/btSearch.git && cd btSearch/docker && docker-
 ```
 After waiting for a while for the system to initialize, start collecting data. The program web interface is available at http://127.0.0.1:8080
 
-## Recommended hardware
+## hardware and network recommend
 * Make sure the server running the program is reachable by hosts outside the Internet
 * Recommended hardware configuration for single server installation: 16 cores 3.8Ghz 32G memory
 * Recommended hardware configuration for k8s HA installation:
