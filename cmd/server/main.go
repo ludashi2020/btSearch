@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Bmixo/btSearch/common"
+	"github.com/Bmixo/btSearch/common/config"
 	"github.com/Bmixo/btSearch/model"
 	"github.com/Bmixo/btSearch/service"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 )
 
 func main() {
+	config.Init()
 	common.Init()
 	model.Init()
 	service.InitServer()
