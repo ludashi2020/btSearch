@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"github.com/Unknwon/goconfig"
 	"github.com/caarlos0/env/v6"
 	mapset "github.com/deckarep/golang-set"
@@ -72,7 +71,6 @@ func InitConfig() {
 	if err := env.Parse(&config); err != nil {
 		panic(err)
 	}
-	fmt.Printf("%+v\n", cfg)
 	ConfigData = &config
 	return
 }
