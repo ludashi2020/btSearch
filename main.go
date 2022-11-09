@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/Bmixo/btSearch/common"
-	"github.com/Bmixo/btSearch/common/config"
 	"github.com/Bmixo/btSearch/model"
 	"github.com/Bmixo/btSearch/service"
 	"github.com/flosch/pongo2"
@@ -11,7 +10,7 @@ import (
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	config.Init()
+	service.InitConfig()
 	common.Init()
 	model.Init()
 	service.Init()
