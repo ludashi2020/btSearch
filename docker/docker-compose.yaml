@@ -28,6 +28,7 @@ services:
       MongoDatabaseAddr: "mongodb://root:torrent@db:27017/torrent?authSource=admin"
       mongoDatabase: torrent
       mongoCollection: torrent
+      EnableElasticsearch: "true"
       EsUsername: elastic
       EsPassWord: changeme
       EsURL: http://es:9200/bavbt/torrent/
