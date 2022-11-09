@@ -6,7 +6,6 @@ import (
 	"github.com/caarlos0/env/v6"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/gin-gonic/gin"
-	"time"
 )
 
 type dbData struct {
@@ -52,19 +51,10 @@ type fileCommon struct {
 }
 
 type Config struct {
-	Home         string        `env:"HOME"`
-	Port         int           `env:"PORT" envDefault:"3000"`
-	Password     string        `env:"PASSWORD,unset"`
-	IsProduction bool          `env:"PRODUCTION"`
-	Hosts        []string      `env:"HOSTS" envSeparator:":"`
-	Duration     time.Duration `env:"DURATION"`
-	TempFolder   string        `env:"TEMP_FOLDER" envDefault:"${HOME}/tmp" envExpand:"true"`
-
-	//--
 	EsUsername           string `env:"EsUsername"`
 	EsPassWord           string `env:"EsPassWord"`
-	HotSearchOnePageSize int    `env:"HotSearchOnePageSize"`
-	HotSearchPageSize    int    `env:"HotSearchPageSize"`
+	HotSearchOnePageSize int    `env:"HotSearchOnePageSize" envDefault:"6"`
+	HotSearchPageSize    int    `env:"HotSearchPageSize" envDefault:"3"`
 	AuthDataBase         string `env:"AuthDataBase"`
 	EnableElasticsearch  bool   `env:"EnableElasticsearch"`
 	EsURL                string `env:"EsURL"`

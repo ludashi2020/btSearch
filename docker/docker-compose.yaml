@@ -1,7 +1,7 @@
 version: "3"
 services:
   es:
-    image: bmixo/torrent-es:1.0.2
+    image: bmixo/torrent-es:1.0.3
     restart: always
     environment:
       - ES_JAVA_OPTS=-Xms2g -Xmx2g
@@ -20,7 +20,7 @@ services:
       - db-data:/data/db
 
   btsearch:
-    image: bmixo/torrent-btsearch:1.0.2
+    image: bmixo/torrent-btsearch:1.0.3
     restart: always
     ports:
       - "8080:8080"
@@ -28,17 +28,17 @@ services:
       MongoDatabaseAddr: "mongodb://root:torrent@db:27017/torrent?authSource=admin"
       mongoDatabase: torrent
       mongoCollection: torrent
-      esUsername: elastic
-      esPassWord: changeme
-      esURL: http://es:9200/bavbt/torrent/
-      esUrlBase: http://es:9200
-      webServerAddr: 0.0.0.0:8080
+      EsUsername: elastic
+      EsPassWord: changeme
+      EsURL: http://es:9200/bavbt/torrent/
+      EsUrlBase: http://es:9200
+      WebServerAddr: 0.0.0.0:8080
     depends_on:
       - es
       - db
 
   worker:
-    image: bmixo/torrent-worker:1.0.2
+    image: bmixo/torrent-worker:1.0.3
     restart: always
     ports:
       - "65512:65512"
@@ -52,18 +52,19 @@ services:
       disableLog: 'false'
 
   server:
-    image: bmixo/torrent-server:1.0.2
+    image: bmixo/torrent-server:1.0.3
     restart: always
     environment:
       MongoDatabaseAddr: "mongodb://root:torrent@db:27017/torrent?authSource=admin"
       mongoDatabase: torrent
       mongoCollection: torrent
-      esUsername: elastic
-      esPassWord: changeme
-      esUrlBase: http://es:9200
+      EsUsername: elastic
+      EsPassWord: changeme
+      EnableElasticsearch: true
+      EsUrlBase: http://es:9200
       verifyPassord: 97711111
       wkNodes: worker:65512
-      esURL: http://es:9200/bavbt/torrent/
+      EsURL: http://es:9200/bavbt/torrent/
       banList: config/banList.txt
       disableLog: 'false'
     depends_on:
