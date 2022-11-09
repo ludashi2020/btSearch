@@ -36,7 +36,7 @@ Tool   |  tools
 ## Notice:
 1.The project uses the reuseport system feature to monitor the port, please keep the new linux kernel version (above 4.9)
 
-2.The docker one-click installation is only for development testing and demonstration program functions, and should not be used in the production environment.
+2.The docker one-click installation is only for development testing and demonstration program features, and should not be used in the production environment.
 
 3.To use this program in production environment, the author assumes that all users know how to use Golang, please Fork any version of the master branch code for development, and do not merge the subsequent master branch code. The master branch code does not guarantee that incompatible changes will not be made.
 
@@ -82,7 +82,7 @@ curl --user elastic:changeme -XPOST 'localhost:9200/bavbt/_open'
 
 ## TODO
 
-- [ ] impl admin dashboard BI data display
+- [ ] impl admin BI data dashboard
 - [x] provide docker image
 - [ ] Provide k8s high availability deployment solution (mongodb sharding + stateless load balancing master + etcd)
 - [ ] gin migrate to iris
