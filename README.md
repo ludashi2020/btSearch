@@ -48,18 +48,18 @@ After waiting for a while for the system to initialize, start collecting data. T
 
 ## hardware and network recommend
 * Make sure the server running the program is reachable by hosts outside the Internet
-* Recommended hardware configuration for single server installation: 16 cores 3.8Ghz 32G memory
+* Recommended hardware configuration for single server installation: 8 cores 3.8Ghz 32G memory
 * Recommended hardware configuration for k8s HA installation:
 ```
-torrent-es-cluster-01: 16 cores 3.8Ghz 32G memory
-torrent-es-cluster-02: 16 cores 3.8Ghz 32G memory
-torrent-es-cluster-03: 16 cores 3.8Ghz 32G memory
-worker-01: 8 cores 2Ghz 1G memory
-worker-02: 8 cores 2Ghz 1G memory
-worker-03: 8 cores 2Ghz 1G memory
-btsearch-01: 16 cores 3.8Ghz 32G memory
-btsearch-02: 16 cores 3.8Ghz 32G memory
-server:  16 cores 3.8Ghz 32G memory
+torrent-es-cluster-01: 8 cores 3.8Ghz 32G memory
+torrent-es-cluster-02: 8 cores 3.8Ghz 32G memory
+torrent-es-cluster-03: 8 cores 3.8Ghz 32G memory
+worker-01: 1-16 cores 1G memory
+worker-02: 1-16 cores 1G memory
+worker-03: 1-16 cores 1G memory
+btsearch-01: 8 cores 3.8Ghz 32G memory
+btsearch-02: 8 cores 3.8Ghz 32G memory
+server:  8 cores 3.8Ghz 32G memory
 ```
 
 ## Dependencies Install: 
