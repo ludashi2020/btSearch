@@ -40,7 +40,7 @@ Tool   |  tools
 
 3.To use this program in production environment, the author assumes that all users know how to use Golang, please Fork any version of the master branch code for development, and do not merge the subsequent master branch code. The master branch code does not guarantee that incompatible changes will not be made.
 
-## Installation (docker one-click installation)：
+## Installation (docker one-click single server installation)：
 ```
 git clone https://github.com/Bmixo/btSearch.git && cd btSearch/docker && docker-compose up 
 ```
