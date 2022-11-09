@@ -34,7 +34,7 @@ Tool   |  tools
 ![image](https://raw.githubusercontent.com/Bmixo/btSearch/master/example/framework.png)
 
 ## Notice:
-1.The project uses the reuseport system feature to monitor the port, please keep the new linux kernel version (above 4.9)
+1.The project uses the reuseport system feature to monitor the port, please keep your server runing the newest linux kernel (version above 4.9)
 
 2.The docker one-click installation is only for development testing and demonstration program features, and should not be used in the production environment.
 
