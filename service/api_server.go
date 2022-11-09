@@ -100,30 +100,34 @@ func (m *Server) handleData() {
 			if err != nil {
 				continue
 			}
-			objectId := torrent.ID.Hex()
-			syncdata, err := json.Marshal(esData{
-				Title:      torrent.Name,
-				HashId:     torrent.InfoHash,
-				Length:     torrent.Length,
-				CreateTime: torrent.CreateTime,
-				FileType:   strings.ToLower(torrent.FileType),
-				Hot:        torrent.Hot,
-			})
-			err = EsPut(esURL+objectId, syncdata)
-			if err != nil && strings.Contains(err.Error(), "500") {
-				for i := 0; i < 20; i++ {
-					//es第一次运行没有初始化时候可能出错
-					err = EsPut(esURL+objectId, syncdata)
-					if err != nil && strings.Contains(err.Error(), "500") {
-						m.printChan <- fmt.Sprintln("update es error code 500,try again\n", err)
-						continue
+
+			if ConfigData.EnableElasticsearch {
+				//es update
+				objectId := torrent.ID.Hex()
+				syncdata, err := json.Marshal(esData{
+					Title:      torrent.Name,
+					HashId:     torrent.InfoHash,
+					Length:     torrent.Length,
+					CreateTime: torrent.CreateTime,
+					FileType:   strings.ToLower(torrent.FileType),
+					Hot:        torrent.Hot,
+				})
+				err = EsPut(ConfigData.EsURL+objectId, syncdata)
+				if err != nil && strings.Contains(err.Error(), "500") {
+					for i := 0; i < 20; i++ {
+						//es第一次运行没有初始化时候可能出错
+						err = EsPut(ConfigData.EsURL+objectId, syncdata)
+						if err != nil && strings.Contains(err.Error(), "500") {
+							m.printChan <- fmt.Sprintln("update es error code 500,try again\n", err)
+							continue
+						}
+						break
 					}
-					break
 				}
-			}
-			if err != nil {
-				m.printChan <- fmt.Sprintln("update es error,", err)
-				continue
+				if err != nil {
+					m.printChan <- fmt.Sprintln("update es error,", err)
+					continue
+				}
 			}
 
 			m.sussNum.Incr(1)

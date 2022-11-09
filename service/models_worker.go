@@ -20,7 +20,7 @@ type node struct {
 	id   string
 }
 
-var bootstapNodes = []string{
+var BootstrappingNodes = []string{
 	"9.rarbg.to:2710",
 	"9.rarbg.me:2710",
 	"open.demonii.com:1337",

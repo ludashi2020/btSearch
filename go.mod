@@ -6,6 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/Unknwon/goconfig v1.0.0
 	github.com/buger/jsonparser v1.1.1
+	github.com/caarlos0/env/v6 v6.10.1
 	github.com/deckarep/golang-set v1.8.0
 	github.com/elastic/go-elasticsearch/v6 v6.8.10
 	github.com/flosch/pongo2 v0.0.0-20200913210552-0d938eb266f3

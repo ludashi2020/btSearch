@@ -1,12 +1,15 @@
 package service
 
 import (
+	"bufio"
 	"context"
 	"github.com/Bmixo/btSearch/api/api_server_1/torrent"
 	mapset "github.com/deckarep/golang-set"
+	"log"
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	reuse "github.com/libp2p/go-reuseport"
@@ -29,6 +32,29 @@ func InitWorker() {
 	udpPort, err = strconv.Atoi(udpPortTmp)
 	checkErr(err)
 	verifyPassord = os.Getenv("verifyPassword")
+	{
+		var bootstrappingNodes []string
+		dataIo, err := os.Open("bootstrapping_nodes.txt")
+		if err == nil && dataIo != nil {
+			reader := bufio.NewReader(dataIo)
+			if reader != nil {
+				for {
+					l, _, err := reader.ReadLine()
+					if err != nil {
+						break
+					}
+					if len(l) > 0 && strings.TrimSpace(string(l)) != "" {
+						bootstrappingNodes = append(bootstrappingNodes, string(l))
+					}
+				}
+
+			}
+		}
+		if len(bootstrappingNodes) > 0 {
+			log.Println("load bootstrappingNodes from file")
+			BootstrappingNodes = bootstrappingNodes
+		}
+	}
 
 }
 

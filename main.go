@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Bmixo/btSearch/common"
+	"github.com/Bmixo/btSearch/common/config"
 	"github.com/Bmixo/btSearch/model"
 	"github.com/Bmixo/btSearch/service"
 	"github.com/flosch/pongo2"
@@ -10,6 +11,7 @@ import (
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	config.Init()
 	common.Init()
 	model.Init()
 	service.Init()
@@ -25,6 +27,6 @@ func main() {
 	go server.Timer()
 	go server.SyncDbHotSearchTimer()
 
-	server.Router.Run(service.WebServerAddr)
+	server.Router.Run(service.ConfigData.WebServerAddr)
 
 }

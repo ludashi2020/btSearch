@@ -1,9 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"github.com/Unknwon/goconfig"
+	"github.com/caarlos0/env/v6"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/gin-gonic/gin"
+	"time"
 )
 
 type dbData struct {
@@ -48,14 +51,38 @@ type fileCommon struct {
 	FileSizeType string
 }
 
+type Config struct {
+	Home         string        `env:"HOME"`
+	Port         int           `env:"PORT" envDefault:"3000"`
+	Password     string        `env:"PASSWORD,unset"`
+	IsProduction bool          `env:"PRODUCTION"`
+	Hosts        []string      `env:"HOSTS" envSeparator:":"`
+	Duration     time.Duration `env:"DURATION"`
+	TempFolder   string        `env:"TEMP_FOLDER" envDefault:"${HOME}/tmp" envExpand:"true"`
+
+	//--
+	EsUsername           string `env:"EsUsername"`
+	EsPassWord           string `env:"EsPassWord"`
+	HotSearchOnePageSize int    `env:"HotSearchOnePageSize"`
+	HotSearchPageSize    int    `env:"HotSearchPageSize"`
+	AuthDataBase         string `env:"AuthDataBase"`
+	EnableElasticsearch  bool   `env:"EnableElasticsearch"`
+	EsURL                string `env:"EsURL"`
+	EsUrlBase            string `env:"EsUrlBase"`
+	WebServerAddr        string `env:"WebServerAddr"`
+}
+
 var (
-	esUsername           = ""
-	esPassWord           = ""
-	hotSearchOnePageSize = 6
-	hotSearchPageSize    = 3
-	authDataBase         = ""
-	esURL                = ""
-	esUrlBase            = ""
-	WebServerAddr        = ""
-	cfg                  *goconfig.ConfigFile
+	cfg        *goconfig.ConfigFile
+	ConfigData *Config
 )
+
+func InitConfig() {
+	var config Config
+	if err := env.Parse(&config); err != nil {
+		panic(err)
+	}
+	fmt.Printf("%+v\n", cfg)
+	ConfigData = &config
+	return
+}

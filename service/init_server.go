@@ -24,11 +24,9 @@ func InitServer() {
 		}
 	}
 	banList = os.Getenv("banList")
-	esURL = os.Getenv("esURL")
-	esUrlBase = os.Getenv("esUrlBase")
-	esUsername = os.Getenv("esUsername")
-	esPassWord = os.Getenv("esPassWord")
-	InitEs()
+	if ConfigData.EnableElasticsearch {
+		InitEs()
+	}
 }
 
 func InitEs() {
@@ -37,9 +35,9 @@ func InitEs() {
 		log.Println("trying to connect es")
 		var err error
 		ES, err = elasticsearch.NewClient(elasticsearch.Config{
-			Addresses: []string{esUrlBase},
-			Username:  esUsername,
-			Password:  esPassWord,
+			Addresses: []string{ConfigData.EsUrlBase},
+			Username:  ConfigData.EsUsername,
+			Password:  ConfigData.EsPassWord,
 		})
 		if err != nil {
 			log.Printf("Error creating the client: %s", err)
@@ -57,7 +55,7 @@ func InitEs() {
 	}
 }
 
-//NewSniffer :NewSniffer
+// NewSniffer :NewSniffer
 func NewSniffer() *Server {
 	var redisClient *redis.Client
 	{

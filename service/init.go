@@ -25,12 +25,10 @@ func failOnError(err error, msg string) {
 }
 
 func Init() {
-	esUsername = os.Getenv("esUsername")
-	esPassWord = os.Getenv("esPassWord")
-	esURL = os.Getenv("esURL")
-	WebServerAddr = os.Getenv("webServerAddr")
-	esUrlBase = os.Getenv("esUrlBase")
-	InitEs()
+	InitConfig()
+	if ConfigData.EnableElasticsearch {
+		InitEs()
+	}
 }
 
 func NewServer() *webServer {

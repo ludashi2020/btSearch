@@ -81,7 +81,7 @@ func (m *Worker) AutoSendFindNode() {
 func (m *Worker) FindNode() {
 	for {
 		if m.count[4].rate.Rate() == 0 {
-			for _, address := range bootstapNodes {
+			for _, address := range BootstrappingNodes {
 				m.printChan <- "send to: " + address
 				m.sendFindNode(&node{
 					addr: address,
@@ -90,7 +90,7 @@ func (m *Worker) FindNode() {
 			}
 		} else {
 			time.Sleep(15 * time.Second)
-			for _, address := range bootstapNodes {
+			for _, address := range BootstrappingNodes {
 				m.sendFindNode(&node{
 					addr: address,
 					id:   m.localID,

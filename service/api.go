@@ -617,7 +617,7 @@ func (server *webServer) syncHotSearch() (result []mvData) {
 			continue
 		}
 		for _, j := range data {
-			if server.hotSearchSet.Cardinality() >= hotSearchPageSize*hotSearchOnePageSize {
+			if server.hotSearchSet.Cardinality() >= ConfigData.HotSearchPageSize*ConfigData.HotSearchOnePageSize {
 				return
 			}
 			if !server.hotSearchSet.Contains(j.ID) {
@@ -641,14 +641,14 @@ func (server *webServer) SyncDbHotSearchTimer() {
 		data := server.syncHotSearch()
 		server.hotSearch = []hotSearchData{}
 		num := 0
-		for i := 0; i < hotSearchPageSize; i++ {
+		for i := 0; i < ConfigData.HotSearchPageSize; i++ {
 			fg := ""
 			if i == 0 {
 				fg = "active"
 			}
 			server.hotSearch = append(server.hotSearch, hotSearchData{
 				Flag: fg,
-				Data: data[i*hotSearchOnePageSize : (i+1)*hotSearchOnePageSize],
+				Data: data[i*ConfigData.HotSearchOnePageSize : (i+1)*ConfigData.HotSearchOnePageSize],
 			})
 			num++
 		}
